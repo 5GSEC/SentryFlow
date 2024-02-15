@@ -1,0 +1,56 @@
+name: ci-test-go
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  go-fmt-sentryflow:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "v1.19.1"
+
+      - name: Check go-fmt
+        run: make gofmt
+        working-directory: sentryflow
+
+  go-lint-sentryflow:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "v1.19.1"
+
+      - name: Check Golint 
+        run: make golint
+        working-directory: sentryflow
+
+  go-sec-sentryflow:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: "v1.19.1"
+
+      - name: Run Gosec Security Scanner
+        run: make gosec
+        working-directory: sentryflow
+
+  license:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check License Header
+        uses: apache/skywalking-eyes@a790ab8dd23a7f861c18bd6aaa9b012e3a234bce
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
