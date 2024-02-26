@@ -1,14 +1,13 @@
 module github.com/5GSEC/sentryflow
 
-go 1.21
-
-toolchain go1.22.0
+go 1.19
 
 replace github.com/5GSEC/sentryflow/protobuf => ../protobuf
 
 require (
 	github.com/5GSEC/sentryflow/protobuf v0.0.0-00010101000000-000000000000
 	github.com/emicklei/go-restful/v3 v3.11.0
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/spf13/viper v1.18.2
 	go.opentelemetry.io/proto/otlp v1.0.0
 	google.golang.org/grpc v1.61.1
