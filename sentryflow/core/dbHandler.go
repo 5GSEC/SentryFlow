@@ -4,8 +4,8 @@ package core
 
 import (
 	"database/sql"
-	cfg "github.com/5GSEC/sentryflow/config"
-	"github.com/5GSEC/sentryflow/types"
+	cfg "github.com/5GSEC/SentryFlow/config"
+	"github.com/5GSEC/SentryFlow/types"
 	"log"
 	"os"
 	"path/filepath"
