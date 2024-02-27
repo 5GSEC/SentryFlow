@@ -31,7 +31,7 @@ jobs:
         fi
 
     - name: Build SentryFlow Docker Image
-      working-directory: ./sentryflow
+      working-directory: ./SentryFlow
       run: |
          make TAG=${{ steps.tag.outputs.tag }} image
 

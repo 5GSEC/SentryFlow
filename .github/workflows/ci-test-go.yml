@@ -17,7 +17,7 @@ jobs:
 
       - name: Check go-fmt
         run: make gofmt
-        working-directory: sentryflow
+        working-directory: SentryFlow
 
   go-lint-sentryflow:
     runs-on: ubuntu-20.04
@@ -30,7 +30,7 @@ jobs:
 
       - name: Check Golint 
         run: make golint
-        working-directory: sentryflow
+        working-directory: SentryFlow
 
   go-sec-sentryflow:
     runs-on: ubuntu-20.04
@@ -43,7 +43,7 @@ jobs:
 
       - name: Run Gosec Security Scanner
         run: make gosec
-        working-directory: sentryflow
+        working-directory: SentryFlow
 
   license:
     runs-on: ubuntu-20.04
