@@ -19,7 +19,7 @@ RUN go mod tidy
 RUN make build
 
 WORKDIR /app
-COPY /sentryflow .
+COPY /SentryFlow .
 
 RUN go mod tidy
 RUN export CGO_ENABLED=1; export CC=gcc;
