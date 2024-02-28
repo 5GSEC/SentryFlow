@@ -19,7 +19,8 @@ clean:
 
 .PHONY: run
 run:
-	docker run -it --rm $(IMAGE_NAME):$(TAG)
+	# docker run -it --rm $(IMAGE_NAME):$(TAG)
+	go run main.go
 
 .PHONY: gofmt
 gofmt:

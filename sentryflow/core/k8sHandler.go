@@ -4,6 +4,12 @@ package core
 
 import (
 	"context"
+	"flag"
+	"log"
+	"path/filepath"
+	"sync"
+	"time"
+
 	"github.com/5GSEC/sentryflow/config"
 	"github.com/5GSEC/sentryflow/types"
 	"gopkg.in/yaml.v2"
@@ -13,9 +19,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"log"
-	"sync"
-	"time"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 )
 
 // K8s global reference for Kubernetes Handler
@@ -54,9 +59,29 @@ func (kh *K8sHandler) InitK8sClient() bool {
 	var err error
 
 	// Initialize in cluster config
-	kh.config, err = rest.InClusterConfig()
+	// kh.config, err = rest.InClusterConfig()
+	// if err != nil {
+	// 	return false
+	// }
+
+	var kubeconfig *string
+
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	}
+	flag.Parse()
+
+	// config
+	kh.config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
-		return false
+		log.Printf("Building config from flags failed, %s, trying to build inclusterconfig", err.Error())
+		kh.config, err = rest.InClusterConfig()
+		if err != nil {
+			log.Printf("error %s building inclusterconfig", err.Error())
+			return false
+		}
 	}
 
 	// Initialize Kubernetes clientSet
@@ -391,7 +416,7 @@ func (kh *K8sHandler) PatchIstioConfigMap() error {
 
 		// Append eps to the existing slice
 		if !duplicate {
-			meshConfig["extensionProviders"] = append(ep.([]map[interface{}]interface{}), eps)
+			meshConfig["extensionProviders"] = append(ep.([]interface{}), eps)
 		}
 	}
 
