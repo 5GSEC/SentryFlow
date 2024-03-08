@@ -11,7 +11,7 @@ build:
 
 .PHONY: image
 image:
-	docker build -t $(IMAGE_NAME):$(TAG) -f ./Dockerfile ../
+	docker build -t $(IMAGE_NAME):$(TAG) -f ../Dockerfile ../
 
 .PHONY: clean
 clean:

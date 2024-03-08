@@ -2,8 +2,6 @@ module github.com/5GSEC/sentryflow
 
 go 1.21
 
-toolchain go1.22.0
-
 replace github.com/5GSEC/sentryflow/protobuf => ../protobuf
 
 require (
