@@ -1,6 +1,6 @@
 module log-client
 
-go 1.21.8
+go 1.19
 
 replace sentryflow/protobuf => ../../protobuf
 
