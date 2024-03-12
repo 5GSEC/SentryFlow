@@ -3,6 +3,7 @@
 package db
 
 import (
+	protobuf "SentryFlow/protobuf"
 	"context"
 	"errors"
 	"fmt"
@@ -10,18 +11,20 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
 	"os"
-	protobuf "sentryflow/protobuf"
 	"time"
 )
 
+// Handler structure
 type Handler struct {
-	client     *mongo.Client
-	database   *mongo.Database
-	collection *mongo.Collection
-	cancel     context.CancelFunc
-	dbURL      string
+	client            *mongo.Client
+	database          *mongo.Database
+	alCollection      *mongo.Collection
+	metricsCollection *mongo.Collection
+	cancel            context.CancelFunc
+	dbURL             string
 }
 
+// Manager structure
 var Manager *Handler
 
 // New creates a new mongoDB handler
@@ -55,12 +58,14 @@ func New() (*Handler, error) {
 
 	// Create 'sentryflow' database and 'api-logs' collection
 	h.database = h.client.Database("sentryflow")
-	h.collection = h.database.Collection("api-logs")
+	h.alCollection = h.database.Collection("api-logs")
+	h.metricsCollection = h.database.Collection("metrics")
 
 	Manager = &h
 	return &h, nil
 }
 
+// Disconnect function
 func (h *Handler) Disconnect() {
 	err := h.client.Disconnect(context.Background())
 	if err != nil {
@@ -70,8 +75,19 @@ func (h *Handler) Disconnect() {
 	return
 }
 
-func (h *Handler) InsertData(data *protobuf.APILog) error {
-	_, err := h.collection.InsertOne(context.Background(), data)
+// InsertAl function
+func (h *Handler) InsertAl(data *protobuf.APILog) error {
+	_, err := h.alCollection.InsertOne(context.Background(), data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// InsertMetrics function
+func (h *Handler) InsertMetrics(data *protobuf.EnvoyMetric) error {
+	_, err := h.metricsCollection.InsertOne(context.Background(), data)
 	if err != nil {
 		return err
 	}

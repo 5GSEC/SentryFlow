@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package protobuf;
+
+option go_package = "SentryFlow/protobuf";
+
+message APIClassificationRequest {
+  repeated string path = 1;
+}
+
+message APIClassificationResponse {
+  map<string, uint64> fields = 2;
+}
+
+service SentryFlowMetrics {
+  rpc GetAPIClassification(stream APIClassificationRequest) returns (stream APIClassificationResponse);
+}

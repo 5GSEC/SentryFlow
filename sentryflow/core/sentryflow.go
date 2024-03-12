@@ -3,11 +3,12 @@
 package core
 
 import (
-	cfg "github.com/5GSEC/sentryflow/config"
-	"github.com/5GSEC/sentryflow/exporter"
-	"github.com/5GSEC/sentryflow/metrics"
 	"log"
 	"sync"
+
+	cfg "github.com/5GSEC/SentryFlow/config"
+	"github.com/5GSEC/SentryFlow/exporter"
+	"github.com/5GSEC/SentryFlow/metrics"
 )
 
 // StopChan Channel
@@ -18,62 +19,45 @@ func init() {
 	StopChan = make(chan struct{})
 }
 
-// NumbatDaemon Structure
-type NumbatDaemon struct {
+// SentryFlowDaemon Structure
+type SentryFlowDaemon struct {
 	WgDaemon *sync.WaitGroup
 }
 
-// NewNumbatDaemon Function
-func NewNumbatDaemon() *NumbatDaemon {
-	dm := new(NumbatDaemon)
+// NewSentryFlowDaemon Function
+func NewSentryFlowDaemon() *SentryFlowDaemon {
+	dm := new(SentryFlowDaemon)
 
 	dm.WgDaemon = new(sync.WaitGroup)
 
 	return dm
 }
 
-// DestroyNumbatDaemon Function
-func (dm *NumbatDaemon) DestroyNumbatDaemon() {
-
+// DestroySentryFlowDaemon Function
+func (dm *SentryFlowDaemon) DestroySentryFlowDaemon() {
+	//metrics.StartAIEngine()
+	log.Printf("[SentryFlow] Started AI Engine connection")
 }
 
 // watchK8s Function
-func (dm *NumbatDaemon) watchK8s() {
+func (dm *SentryFlowDaemon) watchK8s() {
 	K8s.RunInformers(StopChan, dm.WgDaemon)
 }
 
 // logProcessor Function
-func (dm *NumbatDaemon) logProcessor() {
+func (dm *SentryFlowDaemon) logProcessor() {
 	StartLogProcessor(dm.WgDaemon)
 	log.Printf("[SentryFlow] Started log processor")
 }
 
 // metricAnalyzer Function
-func (dm *NumbatDaemon) metricAnalyzer() {
+func (dm *SentryFlowDaemon) metricAnalyzer() {
 	metrics.StartMetricsAnalyzer(dm.WgDaemon)
 	log.Printf("[SentryFlow] Started metric analyzer")
 }
 
-// otelServer Function
-func (dm *NumbatDaemon) otelServer() {
-	// Initialize and start OpenTelemetry Server
-	err := Oh.InitOtelServer()
-	if err != nil {
-		log.Fatalf("[SentryFlow] Unable to intialize OpenTelemetry Server: %v", err)
-		return
-	}
-
-	err = Oh.StartOtelServer(dm.WgDaemon)
-	if err != nil {
-		log.Fatalf("[SentryFlow] Unable to start OpenTelemetry Server: %v", err)
-		return
-	}
-
-	log.Printf("[SentryFlow] Started OpenTelemetry collector")
-}
-
 // exporterServer Function
-func (dm *NumbatDaemon) exporterServer() {
+func (dm *SentryFlowDaemon) exporterServer() {
 	// Initialize and start exporter server
 	err := exporter.Exp.InitExporterServer()
 	if err != nil {
@@ -88,8 +72,12 @@ func (dm *NumbatDaemon) exporterServer() {
 	log.Printf("[SentryFlow] Initialized exporter")
 }
 
+func (dm *SentryFlowDaemon) aiEngine() {
+
+}
+
 // patchK8s Function
-func (dm *NumbatDaemon) patchK8s() error {
+func (dm *SentryFlowDaemon) patchK8s() error {
 	err := K8s.PatchIstioConfigMap()
 	if err != nil {
 		return err
@@ -115,12 +103,12 @@ func (dm *NumbatDaemon) patchK8s() error {
 // SentryFlow Function
 func SentryFlow() {
 	// create a daemon
-	dm := NewNumbatDaemon()
+	dm := NewSentryFlowDaemon()
 
 	// Initialize Kubernetes client
 	if !K8s.InitK8sClient() {
 		log.Printf("[Error] Failed to initialize Kubernetes client")
-		dm.DestroyNumbatDaemon()
+		dm.DestroySentryFlowDaemon()
 		return
 	}
 
@@ -134,17 +122,24 @@ func SentryFlow() {
 	}
 	log.Printf("[SentryFlow] Patched Kubernetes and Istio configuration")
 
+	if !exporter.MDB.InitMetricsDBHandler() {
+		log.Printf("[Error] Failed to initialize Metrics DB")
+	}
+	log.Printf("[SentryFlow] Successfuly initialized metrics DB")
+
 	// Start log processor
 	dm.logProcessor()
 
 	// Start metric analyzer
 	dm.metricAnalyzer()
 
-	// Start OpenTelemetry server
-	dm.otelServer()
-
 	// Start exporter server
 	dm.exporterServer()
+
+	if !exporter.AH.InitAIHandler() {
+		log.Printf("[Error] Failed to initialize AI Engine")
+	}
+	log.Printf("[SentryFlow] Successfuly initialized AI Engine")
 
 	log.Printf("[SentryFlow] Successfully started SentryFlow")
 	dm.WgDaemon.Wait()

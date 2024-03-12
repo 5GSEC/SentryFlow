@@ -4,8 +4,12 @@ package core
 
 import (
 	"context"
-	"github.com/5GSEC/sentryflow/config"
-	"github.com/5GSEC/sentryflow/types"
+	"log"
+	"sync"
+	"time"
+
+	"github.com/5GSEC/SentryFlow/config"
+	"github.com/5GSEC/SentryFlow/types"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,9 +17,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
-	"log"
-	"sync"
-	"time"
 )
 
 // K8s global reference for Kubernetes Handler
@@ -326,6 +327,28 @@ func (kh *K8sHandler) PatchIstioConfigMap() error {
 		// Handle error
 		log.Fatalf("[Patcher] Unable to unmarshall configmap istio-system/istio :%v", err)
 		return err
+	}
+
+	_, eeaExist := meshConfig["enableEnvoyAccessLogService"]
+	if eeaExist {
+		log.Printf("Overwrite the contents of \"enableEnvoyAccessLogService\"")
+	}
+	meshConfig["enableEnvoyAccessLogService"] = true
+
+	_, ealExist := meshConfig["defaultConfig"].(map[interface{}]interface{})["envoyAccessLogService"]
+	if ealExist {
+		log.Printf("Overwrite the contents of \"defaultConfig.envoyAccessLogService\"")
+	}
+	meshConfig["defaultConfig"].(map[interface{}]interface{})["envoyAccessLogService"] = map[string]string{
+		"address": "sentryflow.sentryflow.svc.cluster.local:4317",
+	}
+
+	_, emExist := meshConfig["defaultConfig"].(map[interface{}]interface{})["envoyMetricsService"]
+	if emExist {
+		log.Printf("Overwrite the contents of \"defaultConfig.envoyMetricsService\"")
+	}
+	meshConfig["defaultConfig"].(map[interface{}]interface{})["envoyMetricsService"] = map[string]string{
+		"address": "sentryflow.sentryflow.svc.cluster.local:4317",
 	}
 
 	// Work with defaultProviders.accessLogs
