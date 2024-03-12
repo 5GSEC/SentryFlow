@@ -1,13 +1,12 @@
-
 # SentryFlow
 
-[![SentryFlow Docker Build](https://github.com/5GSEC/sentryflow/actions/workflows/sentryflow-release-image.yml/badge.svg)](https://github.com/5GSEC/sentryflow/actions/workflows/sentryflow-release-image.yml) [![CI Test](https://github.com/5GSEC/sentryflow/actions/workflows/ci-test-go.yml/badge.svg)](https://github.com/5GSEC/sentryflow/actions/workflows/ci-test-go.yml)
+[![SentryFlow Docker Build](https://github.com/5gsec/SentryFlow/actions/workflows/sentryflow-release-image.yml/badge.svg)](https://github.com/5gsec/SentryFlow/actions/workflows/sentryflow-release-image.yml) [![CI Test](https://github.com/5gsec/SentryFlow/actions/workflows/ci-test-go.yml/badge.svg)](https://github.com/5gsec/SentryFlow/actions/workflows/ci-test-go.yml) [![ci-test-py](https://github.com/5gsec/SentryFlow/actions/workflows/ci-test-py.yml/badge.svg)](https://github.com/5gsec/SentryFlow/actions/workflows/ci-test-py.yml)
 
 SentryFlow is a cloud-native system for API observability and security, specializing in log collection, metric production, and data exportation.
 
 ## Architecture Overview
 
-![Sentryflow Overview](docs/sentryflow_overview.png)
+![SentryFlow_Overview](docs/sentryflow_overview.png)
 
 ### Features
 - Generation of API Access Logs

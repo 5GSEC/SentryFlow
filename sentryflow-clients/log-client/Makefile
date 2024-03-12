@@ -6,7 +6,7 @@ TAG = v0.1
 .PHONY: build
 
 build:
-	docker build -t $(IMAGE_NAME):$(TAG) -f ../../Dockerfile.log-client ../../
+	docker build -t $(IMAGE_NAME):$(TAG) -f ./Dockerfile ../../
 
 .PHONY: clean
 
