@@ -1,6 +1,3 @@
-*.pb.go
-*.tar
-
 ### macOS
 .DS_Store
 
