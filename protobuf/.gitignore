@@ -1,3 +1,9 @@
-.idea/
-*.pb.go
-*.tar
+### macOS
+.DS_Store
+
+# editor and IDE paraphernalia
+.idea
+.vscode
+*.swp
+*.swo
+*~

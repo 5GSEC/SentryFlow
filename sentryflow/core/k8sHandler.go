@@ -414,7 +414,7 @@ func (kh *K8sHandler) PatchIstioConfigMap() error {
 
 		// Append eps to the existing slice
 		if !duplicate {
-			meshConfig["extensionProviders"] = append(ep.([]map[interface{}]interface{}), eps)
+			meshConfig["extensionProviders"] = append(ep.([]interface{}), eps)
 		}
 	}
 

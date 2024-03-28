@@ -1,30 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
 
-### Builder
-
-FROM golang:1.19-alpine3.17 as builder
+FROM golang:1.21-alpine3.19 as builder
+ARG TARGETOS
+ARG TARGETARCH
 
 RUN apk --no-cache update
-RUN apk add --no-cache git clang llvm make gcc protobuf
-
-RUN mkdir /app
-RUN mkdir /protobuf
-
-WORKDIR /protobuf
-
-COPY /protobuf .
-
-WORKDIR /app
-
-COPY /sentryflow-clients/mongo-client .
-
+RUN apk add --no-cache make protobuf
 RUN go install github.com/golang/protobuf/protoc-gen-go@latest
 RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-RUN go build -o mongo-client
+
+WORKDIR /protobuf
+COPY /protobuf .
+RUN go mod tidy
+RUN make build
+
+WORKDIR /app
+COPY /sentryflow-clients/mongo-client .
+
+RUN go mod tidy
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -ldflags="-w" -o mongo-client main.go
 
 ### Make executable image
-
-FROM alpine:3.18 as client
+FROM alpine:3.19 as client
 
 RUN echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories
 
