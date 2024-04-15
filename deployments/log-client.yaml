@@ -25,3 +25,9 @@ spec:
           value: "sentryflow.sentryflow.svc.cluster.local"
         - name: SERVER_PORT
           value: "8080"
+        - name: METRIC_FILTER
+          value: "envoy"
+        - name: LOG_CFG
+          value: "stdout"
+        - name: METRIC_CFG
+          value: "stdout"
