@@ -14,8 +14,3 @@ go.sum: go.mod
 .PHONY: clean
 clean:
 	rm -f go.sum *.pb.go
-
-.PHONY: deps
-deps:
-	sudo cp bin/protoc /usr/local/bin/
-	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
