@@ -138,6 +138,7 @@ func SentryFlow() {
 
 	if !exporter.AH.InitAIHandler() {
 		log.Printf("[Error] Failed to initialize AI Engine")
+		return
 	}
 	log.Printf("[SentryFlow] Successfuly initialized AI Engine")
 

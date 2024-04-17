@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/5GSEC/SentryFlow/config"
-	"github.com/5GSEC/SentryFlow/types"
 	"gopkg.in/yaml.v2"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,6 +15,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/5GSEC/SentryFlow/config"
+	"github.com/5GSEC/SentryFlow/types"
 )
 
 // K8s global reference for Kubernetes Handler
@@ -101,6 +102,7 @@ func (kh *K8sHandler) initExistingResources() {
 	podList, err := kh.clientSet.CoreV1().Pods(corev1.NamespaceAll).List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		log.Print("Error listing Pods:", err.Error())
+		return
 	}
 
 	// Add existing Pods to the podMap
@@ -114,6 +116,7 @@ func (kh *K8sHandler) initExistingResources() {
 	serviceList, err := kh.clientSet.CoreV1().Services(corev1.NamespaceAll).List(context.TODO(), v1.ListOptions{})
 	if err != nil {
 		log.Print("Error listing Services:", err.Error())
+		return
 	}
 
 	// Add existing Services to the svcMap
@@ -414,7 +417,7 @@ func (kh *K8sHandler) PatchIstioConfigMap() error {
 
 		// Append eps to the existing slice
 		if !duplicate {
-			meshConfig["extensionProviders"] = append(ep.([]map[interface{}]interface{}), eps)
+			meshConfig["extensionProviders"] = append(ep.([]interface{}), eps)
 		}
 	}
 
