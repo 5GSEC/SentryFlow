@@ -8,10 +8,11 @@ import (
 	"io"
 	"log"
 
+	"google.golang.org/grpc"
+
 	cfg "github.com/5GSEC/SentryFlow/config"
 	"github.com/5GSEC/SentryFlow/protobuf"
 	"github.com/5GSEC/SentryFlow/types"
-	"google.golang.org/grpc"
 )
 
 // AH Local reference for AI handler server
@@ -74,6 +75,10 @@ func (ah *aiHandler) InitAIHandler() bool {
 	client := protobuf.NewSentryFlowMetricsClient(conn)
 
 	aiStream, err := client.GetAPIClassification(context.Background())
+	if err != nil {
+		log.Printf("[gRPC] Error getting API classification: %v", err)
+		return false
+	}
 
 	AH.aiStream = &streamInform{
 		aiStream: aiStream,
