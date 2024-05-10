@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-engine
   namespace: sentryflow
+  name: ai-engine
 spec:
   replicas: 1
   selector:
@@ -17,9 +17,9 @@ spec:
       - name: sentryflow
         image: 5gsec/sentryflow-ai-engine:v0.1
         ports:
-        - containerPort: 5000
+        - name: ai-engine
           protocol: TCP
-          name: grpc-sentryflow
+          containerPort: 5000
 ---
 apiVersion: v1
 kind: Service
@@ -30,7 +30,7 @@ spec:
   selector:
     app: ai-engine
   ports:
-    - protocol: TCP
-      port: 5000
-      targetPort: 5000
-      name: grpc-sentryflow
+  - name: sentryflow-ai-engine
+    protocol: TCP
+    port: 5000
+    targetPort: 5000

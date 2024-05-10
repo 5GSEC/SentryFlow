@@ -7,7 +7,7 @@ on:
 
 jobs:
   py-pip-ai-sentryflow:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -20,8 +20,8 @@ jobs:
           pip install -r requirements.txt
         working-directory: ai-engine
 
-  py-lint-ai-sentryflow:
-    runs-on: ubuntu-20.04
+  py-ruff-ai-sentryflow:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -34,19 +34,45 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
         working-directory: ai-engine
-  
+
+      - name: Create pyproject.toml
+        run: |
+          echo "[tool.ruff.lint.per-file-ignores]" > pyproject.toml
+          echo '"stringlifier/*" = ["E402", "F811", "F401"]' >> pyproject.toml
+        working-directory: ai-engine
+
       - name: Lint with Ruff
         run: |
           pip install ruff
           ruff --output-format=github .
-        continue-on-error: true
+        working-directory: ai-engine
+
+  py-lint-ai-sentryflow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pylint
+        working-directory: ai-engine
+
+      - name: Lint with Pylint
+        run: |
+          pylint classifier.py
         working-directory: ai-engine
 
   py-pep8-ai-sentryflow:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: 'Run PEP8'
         uses: quentinguidee/pep8-action@v1
         with:
-          arguments: '--max-line-length=120'
+          arguments: '--max-line-length=120 --exclude=*stringlifier/*,*protobuf/*'

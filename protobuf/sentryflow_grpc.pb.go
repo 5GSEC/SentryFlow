@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	SentryFlow_GetLog_FullMethodName          = "/protobuf.SentryFlow/GetLog"
+	SentryFlow_GetAPILog_FullMethodName       = "/protobuf.SentryFlow/GetAPILog"
 	SentryFlow_GetAPIMetrics_FullMethodName   = "/protobuf.SentryFlow/GetAPIMetrics"
 	SentryFlow_GetEnvoyMetrics_FullMethodName = "/protobuf.SentryFlow/GetEnvoyMetrics"
 )
@@ -28,7 +28,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SentryFlowClient interface {
-	GetLog(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetLogClient, error)
+	GetAPILog(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetAPILogClient, error)
 	GetAPIMetrics(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetAPIMetricsClient, error)
 	GetEnvoyMetrics(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetEnvoyMetricsClient, error)
 }
@@ -41,12 +41,12 @@ func NewSentryFlowClient(cc grpc.ClientConnInterface) SentryFlowClient {
 	return &sentryFlowClient{cc}
 }
 
-func (c *sentryFlowClient) GetLog(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetLogClient, error) {
-	stream, err := c.cc.NewStream(ctx, &SentryFlow_ServiceDesc.Streams[0], SentryFlow_GetLog_FullMethodName, opts...)
+func (c *sentryFlowClient) GetAPILog(ctx context.Context, in *ClientInfo, opts ...grpc.CallOption) (SentryFlow_GetAPILogClient, error) {
+	stream, err := c.cc.NewStream(ctx, &SentryFlow_ServiceDesc.Streams[0], SentryFlow_GetAPILog_FullMethodName, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &sentryFlowGetLogClient{stream}
+	x := &sentryFlowGetAPILogClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -56,16 +56,16 @@ func (c *sentryFlowClient) GetLog(ctx context.Context, in *ClientInfo, opts ...g
 	return x, nil
 }
 
-type SentryFlow_GetLogClient interface {
+type SentryFlow_GetAPILogClient interface {
 	Recv() (*APILog, error)
 	grpc.ClientStream
 }
 
-type sentryFlowGetLogClient struct {
+type sentryFlowGetAPILogClient struct {
 	grpc.ClientStream
 }
 
-func (x *sentryFlowGetLogClient) Recv() (*APILog, error) {
+func (x *sentryFlowGetAPILogClient) Recv() (*APILog, error) {
 	m := new(APILog)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (c *sentryFlowClient) GetAPIMetrics(ctx context.Context, in *ClientInfo, op
 }
 
 type SentryFlow_GetAPIMetricsClient interface {
-	Recv() (*APIMetric, error)
+	Recv() (*APIMetrics, error)
 	grpc.ClientStream
 }
 
@@ -97,8 +97,8 @@ type sentryFlowGetAPIMetricsClient struct {
 	grpc.ClientStream
 }
 
-func (x *sentryFlowGetAPIMetricsClient) Recv() (*APIMetric, error) {
-	m := new(APIMetric)
+func (x *sentryFlowGetAPIMetricsClient) Recv() (*APIMetrics, error) {
+	m := new(APIMetrics)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (c *sentryFlowClient) GetEnvoyMetrics(ctx context.Context, in *ClientInfo, 
 }
 
 type SentryFlow_GetEnvoyMetricsClient interface {
-	Recv() (*EnvoyMetric, error)
+	Recv() (*EnvoyMetrics, error)
 	grpc.ClientStream
 }
 
@@ -129,8 +129,8 @@ type sentryFlowGetEnvoyMetricsClient struct {
 	grpc.ClientStream
 }
 
-func (x *sentryFlowGetEnvoyMetricsClient) Recv() (*EnvoyMetric, error) {
-	m := new(EnvoyMetric)
+func (x *sentryFlowGetEnvoyMetricsClient) Recv() (*EnvoyMetrics, error) {
+	m := new(EnvoyMetrics)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (x *sentryFlowGetEnvoyMetricsClient) Recv() (*EnvoyMetric, error) {
 // All implementations should embed UnimplementedSentryFlowServer
 // for forward compatibility
 type SentryFlowServer interface {
-	GetLog(*ClientInfo, SentryFlow_GetLogServer) error
+	GetAPILog(*ClientInfo, SentryFlow_GetAPILogServer) error
 	GetAPIMetrics(*ClientInfo, SentryFlow_GetAPIMetricsServer) error
 	GetEnvoyMetrics(*ClientInfo, SentryFlow_GetEnvoyMetricsServer) error
 }
@@ -150,8 +150,8 @@ type SentryFlowServer interface {
 type UnimplementedSentryFlowServer struct {
 }
 
-func (UnimplementedSentryFlowServer) GetLog(*ClientInfo, SentryFlow_GetLogServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetLog not implemented")
+func (UnimplementedSentryFlowServer) GetAPILog(*ClientInfo, SentryFlow_GetAPILogServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetAPILog not implemented")
 }
 func (UnimplementedSentryFlowServer) GetAPIMetrics(*ClientInfo, SentryFlow_GetAPIMetricsServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetAPIMetrics not implemented")
@@ -171,24 +171,24 @@ func RegisterSentryFlowServer(s grpc.ServiceRegistrar, srv SentryFlowServer) {
 	s.RegisterService(&SentryFlow_ServiceDesc, srv)
 }
 
-func _SentryFlow_GetLog_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _SentryFlow_GetAPILog_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ClientInfo)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(SentryFlowServer).GetLog(m, &sentryFlowGetLogServer{stream})
+	return srv.(SentryFlowServer).GetAPILog(m, &sentryFlowGetAPILogServer{stream})
 }
 
-type SentryFlow_GetLogServer interface {
+type SentryFlow_GetAPILogServer interface {
 	Send(*APILog) error
 	grpc.ServerStream
 }
 
-type sentryFlowGetLogServer struct {
+type sentryFlowGetAPILogServer struct {
 	grpc.ServerStream
 }
 
-func (x *sentryFlowGetLogServer) Send(m *APILog) error {
+func (x *sentryFlowGetAPILogServer) Send(m *APILog) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -201,7 +201,7 @@ func _SentryFlow_GetAPIMetrics_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type SentryFlow_GetAPIMetricsServer interface {
-	Send(*APIMetric) error
+	Send(*APIMetrics) error
 	grpc.ServerStream
 }
 
@@ -209,7 +209,7 @@ type sentryFlowGetAPIMetricsServer struct {
 	grpc.ServerStream
 }
 
-func (x *sentryFlowGetAPIMetricsServer) Send(m *APIMetric) error {
+func (x *sentryFlowGetAPIMetricsServer) Send(m *APIMetrics) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -222,7 +222,7 @@ func _SentryFlow_GetEnvoyMetrics_Handler(srv interface{}, stream grpc.ServerStre
 }
 
 type SentryFlow_GetEnvoyMetricsServer interface {
-	Send(*EnvoyMetric) error
+	Send(*EnvoyMetrics) error
 	grpc.ServerStream
 }
 
@@ -230,7 +230,7 @@ type sentryFlowGetEnvoyMetricsServer struct {
 	grpc.ServerStream
 }
 
-func (x *sentryFlowGetEnvoyMetricsServer) Send(m *EnvoyMetric) error {
+func (x *sentryFlowGetEnvoyMetricsServer) Send(m *EnvoyMetrics) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -243,8 +243,8 @@ var SentryFlow_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "GetLog",
-			Handler:       _SentryFlow_GetLog_Handler,
+			StreamName:    "GetAPILog",
+			Handler:       _SentryFlow_GetAPILog_Handler,
 			ServerStreams: true,
 		},
 		{
