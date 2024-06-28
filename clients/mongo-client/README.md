@@ -12,7 +12,6 @@ $ kubectl apply -f mongo-client.yaml
 ## Mongo client options
 These are the default env value.
 ```bash
-env:
 - LOG_CFG: "stdout"
 - METRIC_CFG: "stdout"
 - METRIC_FILTER: "api"
