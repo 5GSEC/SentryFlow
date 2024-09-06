@@ -13,8 +13,10 @@ import (
 
 // SentryFlowConfig structure
 type SentryFlowConfig struct {
-	CollectorAddr string // Address for Collector gRPC
-	CollectorPort string // Port for Collector gRPC
+	CollectorAddr       string // Address for Collector gRPC
+	CollectorPort       string // Port for Collector gRPC
+	ApiLogCollectorAddr string // Address for API Log HTTP Collector
+	ApiLogCollectorPort string // Port for API Log HTTP Collector
 
 	ExporterAddr string // IP address to use for exporter gRPC
 	ExporterPort string // Port to use for exporter gRPC
@@ -42,8 +44,10 @@ func init() {
 
 // Config const
 const (
-	CollectorAddr string = "collectorAddr"
-	CollectorPort string = "collectorPort"
+	CollectorAddr       string = "collectorAddr"
+	CollectorPort       string = "collectorPort"
+	ApiLogCollectorAddr string = "apiLogCollectorAddr"
+	ApiLogCollectorPort string = "apiLogCollectorPort"
 
 	ExporterAddr string = "exporterAddr"
 	ExporterPort string = "exporterPort"
@@ -64,6 +68,8 @@ const (
 func readCmdLineParams() {
 	collectorAddrStr := flag.String(CollectorAddr, "0.0.0.0", "Address for Collector gRPC")
 	collectorPortStr := flag.String(CollectorPort, "4317", "Port for Collector gRPC")
+	apiLogCollectorAddrStr := flag.String(ApiLogCollectorAddr, "0.0.0.0", "Address for API log HTTP Colletor")
+	apiLogCollectorPortStr := flag.String(ApiLogCollectorPort, "8081", "Port for API log HTTP Colletor")
 
 	exporterAddrStr := flag.String(ExporterAddr, "0.0.0.0", "Address for Exporter gRPC")
 	exporterPortStr := flag.String(ExporterPort, "8080", "Port for Exporter gRPC")
@@ -91,6 +97,8 @@ func readCmdLineParams() {
 
 	viper.SetDefault(CollectorAddr, *collectorAddrStr)
 	viper.SetDefault(CollectorPort, *collectorPortStr)
+	viper.SetDefault(ApiLogCollectorAddr, *apiLogCollectorAddrStr)
+	viper.SetDefault(ApiLogCollectorPort, *apiLogCollectorPortStr)
 
 	viper.SetDefault(ExporterAddr, *exporterAddrStr)
 	viper.SetDefault(ExporterPort, *exporterPortStr)
@@ -118,7 +126,8 @@ func LoadConfig() error {
 
 	GlobalConfig.CollectorAddr = viper.GetString(CollectorAddr)
 	GlobalConfig.CollectorPort = viper.GetString(CollectorPort)
-
+	GlobalConfig.ApiLogCollectorAddr = viper.GetString(ApiLogCollectorAddr)
+	GlobalConfig.ApiLogCollectorPort = viper.GetString(ApiLogCollectorPort)
 	GlobalConfig.ExporterAddr = viper.GetString(ExporterAddr)
 	GlobalConfig.ExporterPort = viper.GetString(ExporterPort)
 

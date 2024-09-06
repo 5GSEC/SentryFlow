@@ -76,13 +76,20 @@ func ProcessAPILogs(wg *sync.WaitGroup) {
 
 	for {
 		select {
-		case logType, ok := <-LogH.apiLogChan:
+		case data, ok := <-LogH.apiLogChan:
 			if !ok {
 				log.Print("[LogProcessor] Failed to process an API log")
 			}
-
-			go AnalyzeAPI(logType.(*protobuf.APILog).Path)
-			go exporter.InsertAPILog(logType.(*protobuf.APILog))
+			switch logType := data.(type) {
+			case *protobuf.APILog:
+				go AnalyzeAPI(logType.Path)
+				go exporter.InsertAPILog(logType)
+			case *protobuf.APILogV2:
+				go exporter.InsertAPILog(logType)
+			default:
+				log.Print("Unsupported API log Version")
+				continue
+			}
 
 		case <-LogH.stopChan:
 			wg.Done()

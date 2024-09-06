@@ -4,11 +4,11 @@ package collector
 
 import (
 	"fmt"
-	"log"
-	"net"
-
 	"github.com/5gsec/SentryFlow/config"
 	"google.golang.org/grpc"
+	"log"
+	"net"
+	"net/http"
 )
 
 // == //
@@ -75,6 +75,19 @@ func StartCollector() bool {
 	go ColH.grpcServer.Serve(ColH.colService)
 
 	log.Print("[Collector] Serving Collector gRPC services")
+
+	// Start the http server
+	address := fmt.Sprintf("%s:%s", config.GlobalConfig.ApiLogCollectorAddr, config.GlobalConfig.ApiLogCollectorPort)
+	log.Print("[Collector] Serving Collector http service on ", address)
+	go func() {
+		// Create a new HTTP server
+		http.HandleFunc("/api/v1/events", DataHandler)
+		err = http.ListenAndServe(address, nil)
+		if err != nil {
+			log.Println("[Collector] Error serving Collector http service on ", err.Error())
+			panic(err)
+		}
+	}()
 
 	return true
 }

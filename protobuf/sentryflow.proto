@@ -4,6 +4,9 @@ package protobuf;
 
 option go_package = "SentryFlow/protobuf";
 
+import "google/protobuf/timestamp.proto";
+
+
 message ClientInfo {
   string hostName = 1;
   string IPAddress = 2;
@@ -35,6 +38,42 @@ message APILog {
   int32 responseCode = 54;
 }
 
+message APILogV2 {
+  int32 context_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  Source source = 3;
+  Destination destination = 4;
+  Request request = 5;
+  Response response = 6;
+  string Protocol = 7;
+}
+
+message Source {
+  string name = 1;
+  string namespace = 2;
+  string ip = 3;
+  int32 port = 4;
+  string type = 5;
+}
+
+message Destination {
+  string name = 1;
+  string namespace = 2;
+  string ip = 3;
+  int32 port = 4;
+  string type = 5;
+}
+
+message Request {
+  map<string,string> headers = 1;
+  string body = 2;
+}
+
+message Response {
+  map<string,string> headers = 1;
+  string body = 2;
+}
+
 message APIMetrics {
   map<string, uint64> perAPICounts = 1;
   // @todo: add some more metrics here
@@ -56,7 +95,8 @@ message EnvoyMetrics {
 }
 
 service SentryFlow {
-  rpc GetAPILog(ClientInfo) returns (stream APILog);
+  rpc GetAPILog(ClientInfo) returns (stream APILog); // To be deprecated
+  rpc GetAPILogV2(ClientInfo) returns (stream APILogV2);
   rpc GetAPIMetrics(ClientInfo) returns (stream APIMetrics);
   rpc GetEnvoyMetrics(ClientInfo) returns (stream EnvoyMetrics);
 }

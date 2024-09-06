@@ -32,12 +32,14 @@ type ExpHandler struct {
 	grpcService     *ExpService
 
 	apiLogExporters       []*apiLogStreamInform
+	apiLogExportersV2     []*apiLogStreamInformV2
 	apiMetricsExporters   []*apiMetricStreamInform
 	envoyMetricsExporters []*envoyMetricsStreamInform
 
 	exporterLock sync.Mutex
 
 	exporterAPILogs    chan *protobuf.APILog
+	exporterAPILogsV2  chan *protobuf.APILogV2
 	exporterAPIMetrics chan *protobuf.APIMetrics
 	exporterMetrics    chan *protobuf.EnvoyMetrics
 
@@ -60,12 +62,14 @@ func NewExporterHandler() *ExpHandler {
 		grpcService: new(ExpService),
 
 		apiLogExporters:       make([]*apiLogStreamInform, 0),
+		apiLogExportersV2:     make([]*apiLogStreamInformV2, 0),
 		apiMetricsExporters:   make([]*apiMetricStreamInform, 0),
 		envoyMetricsExporters: make([]*envoyMetricsStreamInform, 0),
 
 		exporterLock: sync.Mutex{},
 
 		exporterAPILogs:    make(chan *protobuf.APILog),
+		exporterAPILogsV2:  make(chan *protobuf.APILogV2),
 		exporterAPIMetrics: make(chan *protobuf.APIMetrics),
 		exporterMetrics:    make(chan *protobuf.EnvoyMetrics),
 
@@ -111,6 +115,9 @@ func StartExporter(wg *sync.WaitGroup) bool {
 	// Export APILogs
 	go ExpH.exportAPILogs(wg)
 
+	// Export APILogsV2
+	go ExpH.exportAPILogsV2(wg)
+
 	log.Printf("[Exporter] Exporting API logs through gRPC services")
 
 	// Export APIMetrics
@@ -133,6 +140,9 @@ func StartExporter(wg *sync.WaitGroup) bool {
 // StopExporter Function
 func StopExporter() bool {
 	// One for exportAPILogs
+	ExpH.stopChan <- struct{}{}
+
+	// One for exportAPILogsV2
 	ExpH.stopChan <- struct{}{}
 
 	// One for exportAPIMetrics
@@ -166,6 +176,30 @@ func (exp *ExpHandler) exportAPILogs(wg *sync.WaitGroup) {
 
 			if err := exp.SendAPILogs(apiLog); err != nil {
 				log.Printf("[Exporter] Failed to export API Logs: %v", err)
+			}
+
+		case <-exp.stopChan:
+			wg.Done()
+			return
+		}
+	}
+}
+
+// exportAPILogs Function
+func (exp *ExpHandler) exportAPILogsV2(wg *sync.WaitGroup) {
+	wg.Add(1)
+
+	for {
+		select {
+		case apiLog, ok := <-exp.exporterAPILogsV2:
+			if !ok {
+				log.Printf("[Exporter] Failed to fetch APILogs(V2) from APIs channel")
+				wg.Done()
+				return
+			}
+
+			if err := exp.SendAPILogsV2(apiLog); err != nil {
+				log.Printf("[Exporter] Failed to export API Logs(V2): %v", err)
 			}
 
 		case <-exp.stopChan:

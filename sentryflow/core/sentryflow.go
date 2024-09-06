@@ -71,11 +71,11 @@ func (sf *SentryFlowService) DestroySentryFlow() {
 	}
 
 	// Stop API classifier
-	if processor.StopAPIClassifier() {
-		log.Print("[SentryFlow] Stopped API Classifier")
-	} else {
-		log.Print("[SentryFlow] Failed to stop API Classifier")
-	}
+	// if processor.StopAPIClassifier() {
+	// 	log.Print("[SentryFlow] Stopped API Classifier")
+	// } else {
+	// 	log.Print("[SentryFlow] Failed to stop API Classifier")
+	// }
 
 	// Stop exporter
 	if exporter.StopExporter() {
@@ -169,10 +169,10 @@ func SentryFlow() {
 	}
 
 	// Start API classifier
-	if !processor.StartAPIClassifier(sf.waitGroup) {
-		sf.DestroySentryFlow()
-		return
-	}
+	// if !processor.StartAPIClassifier(sf.waitGroup) {
+	// 	sf.DestroySentryFlow()
+	// 	return
+	// }
 
 	// Start exporter
 	if !exporter.StartExporter(sf.waitGroup) {
