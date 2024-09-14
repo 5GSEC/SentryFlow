@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
-PROG_NAME = sentryflow
-IMAGE_NAME = 5gsec/$(PROG_NAME)
-TAG = v0.1
+PROG_NAME ?= sentryflow
+IMAGE_NAME ?= 5gsec/$(PROG_NAME)
+TAG ?= v0.1
 
 .PHONY: build
 build: gofmt golint gosec
