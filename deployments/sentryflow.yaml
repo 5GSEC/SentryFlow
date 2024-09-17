@@ -2,45 +2,60 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: sentryflow
-  labels:
-    istio-injection: disabled # avoid Istio sidecar-injection
-    pod-security.kubernetes.io/audit: privileged
-    pod-security.kubernetes.io/enforce: privileged
-    pod-security.kubernetes.io/warn: privileged
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
+  name: sentryflow
   namespace: sentryflow
-  name: sentryflow-sa
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: sentryflow-cr
+  name: sentryflow
 rules:
-- apiGroups: ["*"]
-  verbs: ["*"]
-  resources: ["*"]
+  - apiGroups:
+      - networking.istio.io
+    verbs:
+      - get
+      - create
+      - delete
+    resources:
+      - envoyfilters
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: sentryflow-rb
+  name: sentryflow
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: sentryflow-cr
+  name: sentryflow
 subjects:
-- kind: ServiceAccount
+  - kind: ServiceAccount
+    name: sentryflow
+    namespace: sentryflow
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config
   namespace: sentryflow
-  name: sentryflow-sa
+data:
+  config.yaml: |2-
+    receivers:
+      serviceMeshes:
+        - name: istio-sidecar
+          enable: true
+    exporter:
+      grpc:
+        port: 8080
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  namespace: sentryflow
   name: sentryflow
+  namespace: sentryflow
 spec:
   replicas: 1
   selector:
@@ -51,17 +66,46 @@ spec:
       labels:
         app: sentryflow
     spec:
-      serviceAccountName: sentryflow-sa
+      serviceAccountName: sentryflow
       containers:
-      - name: sentryflow
-        image: 5gsec/sentryflow:v0.1
-        ports:
-        - name: otel-grpc
-          protocol: TCP
-          containerPort: 4317
-        - name: sentryflow-grpc
-          protocol: TCP
-          containerPort: 8080
+        - name: sentryflow
+          image: docker.io/5gsec/sentryflow:v0.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config
+            - /var/lib/sentryflow/config.yaml
+          volumeMounts:
+            - mountPath: /var/lib/sentryflow/
+              name: config
+          ports:
+            - containerPort: 8080
+              name: exporter
+              protocol: TCP
+            - containerPort: 8081
+              name: filter-server
+              protocol: TCP
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1111
+            allowPrivilegeEscalation: false
+          readinessProbe:
+            httpGet:
+              port: 8081
+              path: /healthz
+              httpHeaders:
+                - name: status
+                  value: "200"
+            initialDelaySeconds: 5
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: config
+            defaultMode: 420
 ---
 apiVersion: v1
 kind: Service
@@ -72,11 +116,11 @@ spec:
   selector:
     app: sentryflow
   ports:
-  - name: otel-grpc
-    protocol: TCP
-    port: 4317
-    targetPort: 4317
-  - name: sentryflow-grpc
-    protocol: TCP
-    port: 8080
-    targetPort: 8080
+    - name: exporter
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+    - name: filter-server
+      port: 8081
+      targetPort: 8081
+      protocol: TCP

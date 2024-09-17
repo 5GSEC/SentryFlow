@@ -1,0 +1,17 @@
+receivers: # aka sources
+  serviceMeshes:
+    - name: istio-sidecar
+      enable: true
+  others: # TBD
+    - name: "coroot"
+      # Either gRPC or HTTP not both
+      grpc:
+        url: localhost
+        port: 1234
+      http:
+        url: localhost
+        port: 4321
+
+exporter:
+  grpc:
+    port: 8080
