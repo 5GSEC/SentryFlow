@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2024 Authors of SentryFlow
+
 BINARY_NAME ?= sentryflow
 REGISTRY ?= docker.io/5gsec
 VERSION ?= $(shell git rev-parse HEAD)
@@ -36,6 +39,10 @@ golangci-lint:
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter
 	@$(GOLANGCI_LINT) run
+
+.PHONY: license
+license: ## Check and fix license header on all go files
+	@../scripts/add-license-header
 
 ##@ Build
 

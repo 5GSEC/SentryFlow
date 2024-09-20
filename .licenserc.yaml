@@ -12,6 +12,8 @@ header:
 
   paths-ignore:
     - "protobuf/*"
+    # Explicitly mention generated go files otherwise the check won't pass.
+    - "protobuf/**/*.go"
 
   comment: on-failure
 
