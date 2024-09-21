@@ -1,15 +1,9 @@
-// SPDX-License-Identifier: Apache-2.0
-
 package main
 
 import (
-	"github.com/5gsec/SentryFlow/core"
+	"github.com/5GSEC/SentryFlow/cmd"
 )
 
-// ========== //
-// == Main == //
-// ========== //
-
 func main() {
-	core.SentryFlow()
+	_ = cmd.RootCmd.Execute()
 }

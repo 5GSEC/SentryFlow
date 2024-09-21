@@ -1,36 +1,31 @@
-# SPDX-License-Identifier: Apache-2.0
+FROM golang:1.23 AS builder
 
-### Builder
+ARG TARGETOS
+ARG TARGETARCH
 
-FROM golang:1.21-alpine3.17 as builder
+RUN mkdir -p /protobuf/golang
 
-RUN apk --no-cache update
-RUN apk add --no-cache git clang llvm make gcc protobuf musl-dev
-RUN apk add --update alpine-sdk
+COPY protobuf/golang /protobuf/golang
 
-RUN go install github.com/golang/protobuf/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-
-RUN mkdir /sentryflow
-RUN mkdir /protobuf
-
-WORKDIR /protobuf
-COPY /protobuf .
+# Required to embed build info into binary.
+COPY .git /.git
 
 WORKDIR /sentryflow
-COPY /sentryflow .
 
-RUN export CGO_ENABLED=1; export CC=gcc;
-RUN go build -o sentryflow
+COPY sentryflow/go.mod .
+COPY sentryflow/go.sum .
+RUN go mod download
 
-### Make executable image
+COPY sentryflow/cmd cmd/
+COPY sentryflow/pkg pkg/
+COPY sentryflow/main.go main.go
+COPY sentryflow/Makefile Makefile
 
-FROM alpine:3.17 as sentryflow
+WORKDIR /
 
-# RUN echo "@community http://dl-cdn.alpinelinux.org/alpine/edge/community" | tee -a /etc/apk/repositories
-# RUN apk --no-cache update
-# RUN apk add bash
+RUN GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} make -C sentryflow build
 
-COPY --from=builder /sentryflow/sentryflow /
+FROM scratch
+COPY --from=builder /sentryflow/bin/sentryflow /
 
-CMD ["/sentryflow"]
+ENTRYPOINT ["/sentryflow"]
