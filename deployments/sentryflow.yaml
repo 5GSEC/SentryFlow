@@ -69,8 +69,8 @@ spec:
       serviceAccountName: sentryflow
       containers:
         - name: sentryflow
-          image: docker.io/5gsec/sentryflow:v0.1
-          imagePullPolicy: IfNotPresent
+          image: 192.168.122.1:5000/5gsec/sentryflow:latest
+          imagePullPolicy: Always
           args:
             - --config
             - /var/lib/sentryflow/config.yaml

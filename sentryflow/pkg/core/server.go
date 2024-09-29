@@ -84,24 +84,39 @@ func (m *Manager) registerRoutes() {
 			return
 		}
 
-		apiEvent := &protobuf.APIEvent{}
-		if err := protojson.Unmarshal(body, apiEvent); err != nil {
-			m.Logger.Info("failed to unmarshal api event, error:", err)
-			http.Error(w, "failed to parse request body", http.StatusBadRequest)
+		// check the content type
+		contentType := r.Header.Get("Content-Type")
+		var apiEvent *protobuf.APIEvent
+
+		if strings.Contains(contentType, "application/json") {
+			m.Logger.Info("application/json")
+			m.Logger.Info("body: ", string(body))
 			return
+
+		} else if strings.Contains(contentType, "application/protobuf") {
+			fmt.Print("application/protobuf")
+			apiEvent = &protobuf.APIEvent{}
+			if err := protojson.Unmarshal(body, apiEvent); err != nil {
+				m.Logger.Info("failed to unmarshal api event, error:", err)
+				http.Error(w, "failed to parse request body", http.StatusBadRequest)
+				return
+			}
 		}
 
-		if r.ProtoMajor == 2 {
-			if strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-				apiEvent.Protocol = "grpc"
-			} else {
-				apiEvent.Protocol = "HTTP/2.0"
-			}
-		} else if r.ProtoMajor == 1 && r.ProtoMinor == 1 {
-			apiEvent.Protocol = "HTTP/1.1"
-		} else if r.ProtoMajor == 1 && r.ProtoMinor == 0 {
-			apiEvent.Protocol = "HTTP/1.0"
-		}
-		m.ApiEvents <- apiEvent
+		defer r.Body.Close()
+
+		return
+		// if r.ProtoMajor == 2 {
+		// 	if strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
+		// 		apiEvent.Protocol = "grpc"
+		// 	} else {
+		// 		apiEvent.Protocol = "HTTP/2.0"
+		// 	}
+		// } else if r.ProtoMajor == 1 && r.ProtoMinor == 1 {
+		// 	apiEvent.Protocol = "HTTP/1.1"
+		// } else if r.ProtoMajor == 1 && r.ProtoMinor == 0 {
+		// 	apiEvent.Protocol = "HTTP/1.0"
+		// }
+		// m.ApiEvents <- apiEvent
 	})
 }
