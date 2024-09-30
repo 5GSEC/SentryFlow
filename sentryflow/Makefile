@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2024 Authors of SentryFlow
+
 BINARY_NAME ?= sentryflow
 REGISTRY ?= docker.io/5gsec
 VERSION ?= $(shell git rev-parse HEAD)
