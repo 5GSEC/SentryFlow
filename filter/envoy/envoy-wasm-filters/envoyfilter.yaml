@@ -1,0 +1,29 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: http-filter
+  namespace: istio-system
+spec:
+  configPatches:
+    - applyTo: CLUSTER
+      match:
+        # Apply to all listeners/routes/clusters in both sidecars and gateways.
+        # https://istio.io/latest/docs/reference/config/networking/envoy-filter/#EnvoyFilter-PatchContext
+        context: ANY
+      patch:
+        operation: ADD
+        value:
+          connect_timeout: 1s
+          lb_policy: ROUND_ROBIN
+          load_assignment:
+            cluster_name: sentryflow
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          address: sentryflow.sentryflow
+                          port_value: 8081
+                          protocol: TCP
+          name: sentryflow
+          type: LOGICAL_DNS
