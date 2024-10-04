@@ -1,15 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 Authors of SentryFlow
 
 package main
 
 import (
-	"github.com/5gsec/SentryFlow/core"
+	"github.com/5GSEC/SentryFlow/cmd"
 )
 
-// ========== //
-// == Main == //
-// ========== //
-
 func main() {
-	core.SentryFlow()
+	_ = cmd.RootCmd.Execute()
 }
