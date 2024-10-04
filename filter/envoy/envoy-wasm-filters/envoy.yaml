@@ -1,0 +1,64 @@
+static_resources:
+  listeners:
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 10000
+    filter_chains:
+      - filters:
+          - name: envoy.filters.network.http_connection_manager
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+              stat_prefix: ingress_http
+              codec_type: AUTO
+              route_config:
+                name: local_routes
+                virtual_hosts:
+                  - name: local_service
+                    domains:
+                      - "*"
+                    routes:
+                      - match:
+                          prefix: "/"
+                        direct_response:
+                          status: 200
+                          body:
+                            inline_string: "Namaste world!"
+              http_filters:
+                - name: envoy.filters.http.wasm
+                  typed_config:
+                    "@type": type.googleapis.com/udpa.type.v1.TypedStruct
+                    type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+                    value:
+                      config:
+                        name: "httpfilter"
+                        root_id: "httpfilter"
+                        configuration:
+                          "@type": "type.googleapis.com/google.protobuf.StringValue"
+                          value: |
+                            {
+                                "upstream_name": "filterserver",
+                                "authority": "sentryflow",
+                                "api_path": "/v1/api/telemetry"
+                            }
+                        vm_config:
+                          runtime: "envoy.wasm.runtime.v8"
+                          code:
+                            local:
+                              filename: "/etc/envoy/proxy-wasm-plugins/httpfilters.wasm"
+                - name: envoy.filters.http.router
+                  typed_config:
+                    "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: "filterserver"
+      connect_timeout: 1s
+#      type: STRICT_DNS
+      load_assignment:
+        cluster_name: "filterserver"
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 192.168.31.226 #
+                      port_value: 8080
