@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package protobuf;
 
-option go_package = "github.com/5GSEC/SentryFlow/protobuf";
+option go_package = "github.com/5GSEC/SentryFlow/protobuf/golang";
 
 message APIClassifierRequest {
   repeated string API = 1;
