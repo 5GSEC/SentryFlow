@@ -6,7 +6,7 @@ filters:
     port: 8081
 
   envoy:
-    uri: anuragrajawat/httpfilter:v0.1
+    uri: 5gsec/sentryflow-httpfilter:latest
 
 receivers: # aka sources
   serviceMeshes:

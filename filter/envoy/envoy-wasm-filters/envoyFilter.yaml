@@ -1,0 +1,60 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: http-filter
+spec:
+  configPatches:
+    - applyTo: HTTP_FILTER
+      match:
+        context: SIDECAR_OUTBOUND
+        listener:
+          filterChain:
+            filter:
+              name: envoy.filters.network.http_connection_manager
+              subFilter:
+                name: envoy.filters.http.router
+      patch:
+        operation: INSERT_BEFORE
+        value:
+          name: envoy.filters.http.wasm
+          typedConfig:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            typeUrl: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                name: http-filter
+                rootId: http-filter
+                configuration:
+                  "@type": "type.googleapis.com/google.protobuf.StringValue"
+                  value: |
+                    {
+                        "upstream_name": "sentryflow",
+                        "authority": "sentryflow",
+                        "api_path": "/api/v1/events"
+                    }
+                vmConfig:
+                  code:
+                    local:
+                      filename: /var/local/lib/wasm-filters/httpfilters.wasm
+                  runtime: envoy.wasm.runtime.v8
+                  vmId: sentryflow
+    - applyTo: CLUSTER
+      match:
+        context: SIDECAR_OUTBOUND
+      patch:
+        operation: ADD
+        value:
+          name: sentryflow
+          type: LOGICAL_DNS
+          connect_timeout: 0.5s
+          lb_policy: ROUND_ROBIN
+          load_assignment:
+            cluster_name: sentryflow
+            endpoints:
+              - lb_endpoints:
+                  - endpoint:
+                      address:
+                        socket_address:
+                          protocol: TCP
+                          address: "sentryflow.sentryflow"
+                          port_value: 8080
