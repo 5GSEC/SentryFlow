@@ -3,12 +3,11 @@ module github.com/5GSEC/SentryFlow
 go 1.23
 
 require (
-	github.com/5GSEC/SentryFlow/protobuf v0.0.0-00010101000000-000000000000
+	github.com/5GSEC/SentryFlow/protobuf/golang v0.0.0-00010101000000-000000000000
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	go.opentelemetry.io/proto/otlp v1.3.1
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.67.0
 	google.golang.org/protobuf v1.34.2
@@ -36,7 +35,6 @@ require (
 	github.com/google/gnostic-models v0.6.8 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -87,4 +85,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/5GSEC/SentryFlow/protobuf => ../protobuf/golang
+replace github.com/5GSEC/SentryFlow/protobuf/golang => ../protobuf/golang

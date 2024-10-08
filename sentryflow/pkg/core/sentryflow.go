@@ -21,7 +21,7 @@ import (
 	"github.com/5GSEC/SentryFlow/pkg/k8s"
 	"github.com/5GSEC/SentryFlow/pkg/receiver"
 	"github.com/5GSEC/SentryFlow/pkg/util"
-	"github.com/5GSEC/SentryFlow/protobuf"
+	protobuf "github.com/5GSEC/SentryFlow/protobuf/golang"
 )
 
 type Manager struct {

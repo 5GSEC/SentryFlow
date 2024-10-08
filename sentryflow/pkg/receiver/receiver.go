@@ -14,7 +14,7 @@ import (
 	"github.com/5GSEC/SentryFlow/pkg/config"
 	istiosidecar "github.com/5GSEC/SentryFlow/pkg/receiver/svcmesh/istio/sidecar"
 	"github.com/5GSEC/SentryFlow/pkg/util"
-	"github.com/5GSEC/SentryFlow/protobuf"
+	protobuf "github.com/5GSEC/SentryFlow/protobuf/golang"
 )
 
 // Init initializes the API event sources based on the provided configuration. It

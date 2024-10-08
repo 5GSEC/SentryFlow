@@ -4,7 +4,7 @@
 // - protoc             v5.28.0
 // source: sentryflow.proto
 
-package protobuf
+package golang
 
 import (
 	context "context"
