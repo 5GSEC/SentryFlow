@@ -51,12 +51,17 @@ message APIEvent {
 message Metadata {
   uint32 context_id = 1;
   uint64 timestamp = 2;
-  string istio_version = 3;
+  string istio_version = 3 [deprecated = true];
   string mesh_id = 4;
 
   // The name of the Kubernetes node where the workload is running. If the workload
   // is not running in a Kubernetes environment, this field will be empty.
   string node_name = 5;
+
+  // Name of receiver (e.g., Istio, nginx).
+  string receiver_name = 6;
+  // Version of receiver (e.g., 1.26.2).
+  string receiver_version = 7;
 }
 
 // Workload represents a generic entity that can be either a Kubernetes or
