@@ -84,18 +84,22 @@ class APIEvent(_message.Message):
     def __init__(self, metadata: _Optional[_Union[Metadata, _Mapping]] = ..., source: _Optional[_Union[Workload, _Mapping]] = ..., destination: _Optional[_Union[Workload, _Mapping]] = ..., request: _Optional[_Union[Request, _Mapping]] = ..., response: _Optional[_Union[Response, _Mapping]] = ..., protocol: _Optional[str] = ...) -> None: ...
 
 class Metadata(_message.Message):
-    __slots__ = ("context_id", "timestamp", "istio_version", "mesh_id", "node_name")
+    __slots__ = ("context_id", "timestamp", "istio_version", "mesh_id", "node_name", "receiver_name", "receiver_version")
     CONTEXT_ID_FIELD_NUMBER: _ClassVar[int]
     TIMESTAMP_FIELD_NUMBER: _ClassVar[int]
     ISTIO_VERSION_FIELD_NUMBER: _ClassVar[int]
     MESH_ID_FIELD_NUMBER: _ClassVar[int]
     NODE_NAME_FIELD_NUMBER: _ClassVar[int]
+    RECEIVER_NAME_FIELD_NUMBER: _ClassVar[int]
+    RECEIVER_VERSION_FIELD_NUMBER: _ClassVar[int]
     context_id: int
     timestamp: int
     istio_version: str
     mesh_id: str
     node_name: str
-    def __init__(self, context_id: _Optional[int] = ..., timestamp: _Optional[int] = ..., istio_version: _Optional[str] = ..., mesh_id: _Optional[str] = ..., node_name: _Optional[str] = ...) -> None: ...
+    receiver_name: str
+    receiver_version: str
+    def __init__(self, context_id: _Optional[int] = ..., timestamp: _Optional[int] = ..., istio_version: _Optional[str] = ..., mesh_id: _Optional[str] = ..., node_name: _Optional[str] = ..., receiver_name: _Optional[str] = ..., receiver_version: _Optional[str] = ...) -> None: ...
 
 class Workload(_message.Message):
     __slots__ = ("name", "namespace", "ip", "port")
