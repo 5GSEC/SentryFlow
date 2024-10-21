@@ -12,6 +12,8 @@ import (
 	"google.golang.org/grpc"
 	"istio.io/client-go/pkg/apis/extensions/v1alpha1"
 	networkingv1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -34,6 +36,20 @@ type Manager struct {
 	ApiEvents  chan *protobuf.APIEvent
 }
 
+func (m *Manager) areK8sReceivers(cfg *config.Config) bool {
+	if len(cfg.Receivers.ServiceMeshes) > 0 {
+		return true
+	}
+
+	for _, other := range cfg.Receivers.Others {
+		if other.Name == util.NginxIncorporationIngressController {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Run(ctx context.Context, configFilePath string, kubeConfig string) {
 	mgr := &Manager{
 		Ctx:        ctx,
@@ -50,12 +66,14 @@ func Run(ctx context.Context, configFilePath string, kubeConfig string) {
 		return
 	}
 
-	k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
-	if err != nil {
-		mgr.Logger.Errorf("failed to create k8s client: %v", err)
-		return
+	if mgr.areK8sReceivers(cfg) {
+		k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
+		if err != nil {
+			mgr.Logger.Errorf("failed to create k8s client: %v", err)
+			return
+		}
+		mgr.K8sClient = k8sClient
 	}
-	mgr.K8sClient = k8sClient
 
 	mgr.Wg.Add(1)
 	go func() {
@@ -95,6 +113,8 @@ func Run(ctx context.Context, configFilePath string, kubeConfig string) {
 func registerAndGetScheme() *runtime.Scheme {
 	scheme := runtime.NewScheme()
 	utilruntime.Must(networkingv1alpha3.AddToScheme(scheme))
+	utilruntime.Must(corev1.AddToScheme(scheme))
+	utilruntime.Must(appsv1.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	return scheme
 }
