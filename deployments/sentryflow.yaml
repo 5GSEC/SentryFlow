@@ -55,7 +55,7 @@ subjects:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config
+  name: sentryflow
   namespace: sentryflow
   labels:
     app.kubernetes.io/part-of: sentryflow
@@ -103,7 +103,7 @@ spec:
             - /var/lib/sentryflow/config.yaml
           volumeMounts:
             - mountPath: /var/lib/sentryflow/
-              name: config
+              name: sentryflow
           ports:
             - containerPort: 8080
               name: exporter
@@ -126,9 +126,9 @@ spec:
             initialDelaySeconds: 5
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: config
+        - name: sentryflow
           configMap:
-            name: config
+            name: sentryflow
             defaultMode: 420
 ---
 apiVersion: v1
