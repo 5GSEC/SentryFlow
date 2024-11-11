@@ -73,6 +73,9 @@ func (c *Config) validate() error {
 	if c.Exporter.Grpc == nil {
 		return fmt.Errorf("no exporter's gRPC configuration provided")
 	}
+	if c.Exporter.Grpc != nil && c.Exporter.Grpc.Port == 0 {
+		return fmt.Errorf("no exporter's gRPC port provided")
+	}
 	if c.Exporter.Http != nil {
 		return fmt.Errorf("http exporter is not supported")
 	}

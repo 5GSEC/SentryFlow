@@ -32,16 +32,62 @@ func (m *Manager) startGrpcServer(port uint16) {
 
 func (m *Manager) startHttpServer(port uint16) {
 	m.Logger.Info("Starting HTTP server")
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", m.healthzHandler)
+	mux.HandleFunc("/api/v1/events", m.eventsHandler)
+
 	m.HttpServer = &http.Server{
 		Addr:              fmt.Sprintf(":%d", port),
+		Handler:           mux,
+		ReadTimeout:       3 * time.Second,
 		ReadHeaderTimeout: 3 * time.Second,
+		WriteTimeout:      3 * time.Second,
+		IdleTimeout:       30 * time.Second,
 	}
-	m.registerRoutes()
 
 	m.Logger.Infof("HTTP server listening on port %d", port)
 	if err := m.HttpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		m.Logger.Fatalf("Failed to serve http server, error: %v", err)
 	}
+}
+
+func (m *Manager) eventsHandler(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	if request.Body == nil {
+		m.Logger.Info("Body is nil")
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		m.Logger.Errorf("failed to read request body, error: %v", err)
+		http.Error(writer, "failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	apiEvent := &protobuf.APIEvent{}
+	if err := protojson.Unmarshal(body, apiEvent); err != nil {
+		m.Logger.Info("failed to unmarshal api event, error:", err)
+		http.Error(writer, "failed to unmarshal request body", http.StatusBadRequest)
+		return
+	}
+
+	m.ApiEvents <- apiEvent
+	writer.WriteHeader(http.StatusAccepted)
+}
+
+func (m *Manager) healthzHandler(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	writer.WriteHeader(http.StatusOK)
 }
 
 func (m *Manager) stopServers() {
@@ -51,44 +97,4 @@ func (m *Manager) stopServers() {
 	}
 	m.GrpcServer.GracefulStop()
 	m.Logger.Info("Stopped servers")
-}
-
-func (m *Manager) registerRoutes() {
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-		w.WriteHeader(http.StatusOK)
-	})
-
-	// Register an endpoint to receive API events from EnvoyFilter
-	http.HandleFunc("/api/v1/events", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		if r.Body == nil {
-			m.Logger.Info("Body is nil")
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		body, err := io.ReadAll(r.Body)
-		if err != nil {
-			m.Logger.Errorf("failed to read request body, error: %v", err)
-			http.Error(w, "failed to read request body", http.StatusInternalServerError)
-			return
-		}
-
-		apiEvent := &protobuf.APIEvent{}
-		if err := protojson.Unmarshal(body, apiEvent); err != nil {
-			m.Logger.Info("failed to unmarshal api event, error:", err)
-			http.Error(w, "failed to parse request body", http.StatusBadRequest)
-			return
-		}
-
-		m.ApiEvents <- apiEvent
-	})
 }

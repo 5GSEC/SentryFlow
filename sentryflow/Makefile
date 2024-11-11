@@ -44,6 +44,9 @@ lint: golangci-lint ## Run golangci-lint linter
 license: ## Check and fix license header on all go files
 	@../scripts/add-license-header
 
+.PHONY: test
+test: ## Run unit tests
+	@go test -v ./...
 ##@ Build
 
 .PHONY: build

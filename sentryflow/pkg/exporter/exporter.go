@@ -109,11 +109,11 @@ func (e *exporter) putApiEventOnClientsChannel(ctx context.Context) {
 			}
 			eventToSend := apiEvent
 			e.clients.Lock()
-			for _, clientChan := range e.clients.client {
+			for uid, clientChan := range e.clients.client {
 				select {
 				case clientChan <- eventToSend:
 				default:
-					e.logger.Warn("Event dropped")
+					e.logger.Warnf("event dropped for %v client", uid)
 				}
 			}
 			e.clients.Unlock()

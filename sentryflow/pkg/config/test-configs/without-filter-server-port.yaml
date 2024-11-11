@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2024 Authors of SentryFlow
+
+filters:
+  envoy:
+    uri: anuragrajawat/httpfilter:v0.1
+
+receivers: # aka sources
+  serviceMeshes:
+    - name: istio-sidecar
+      namespace: istio-system
+exporter:
+  grpc:

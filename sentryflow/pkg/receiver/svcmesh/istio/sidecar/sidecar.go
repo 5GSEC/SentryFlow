@@ -46,7 +46,7 @@ func StartMonitoring(ctx context.Context, cfg *config.Config, k8sClient client.C
 
 	logger.Info("Starting istio sidecar mesh monitoring")
 
-	if err := setupWasmPlugin(ctx, cfg, k8sClient); err != nil {
+	if err := createResources(ctx, cfg, k8sClient); err != nil {
 		logger.Error(err)
 		return
 	}
@@ -59,7 +59,7 @@ func StartMonitoring(ctx context.Context, cfg *config.Config, k8sClient client.C
 	logger.Info("Stopped istio sidecar mesh monitoring")
 }
 
-func setupWasmPlugin(ctx context.Context, cfg *config.Config, k8sClient client.Client) error {
+func createResources(ctx context.Context, cfg *config.Config, k8sClient client.Client) error {
 	if err := createEnvoyFilter(ctx, cfg, k8sClient); err != nil {
 		return fmt.Errorf("failed to create EnvoyFilter. Stopping istio sidecar mesh monitoring, error: %v", err)
 	}
@@ -269,5 +269,7 @@ func getIstioRootNamespaceFromConfig(cfg *config.Config) string {
 			return svcMesh.Namespace
 		}
 	}
+	// The `namespace` field is always non-empty due to validation during config
+	// initialization.
 	return ""
 }
