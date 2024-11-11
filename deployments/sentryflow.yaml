@@ -36,6 +36,18 @@ rules:
       - delete
     resources:
       - wasmplugins
+  - apiGroups:
+      - ""
+    verbs:
+      - get
+    resources:
+      - configmaps
+  - apiGroups:
+      - apps
+    verbs:
+      - get
+    resources:
+      - deployments
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
