@@ -178,7 +178,7 @@ spec:
   configPatches:
     - applyTo: CLUSTER
       match:
-        context: SIDECAR_OUTBOUND
+        context: ANY
       patch:
         operation: ADD
         value:

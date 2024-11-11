@@ -1,0 +1,53 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2023 Authors of SentryFlow
+
+name: Latest release
+on:
+  push:
+    branches:
+      - main
+
+permissions: read-all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  files-changed:
+    name: Find out which files were changed
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      sentryflow: ${{ steps.filter.outputs.sentryflow}}
+      envoyfilter: ${{ steps.filter.outputs.envoyfilter}}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3.0.2
+        id: filter
+        with:
+          filters: |
+            sentryflow:
+              - 'sentryflow/**'
+            envoyfilter:
+              - 'filter/envoy/envoy-wasm-filters/**'
+
+  release-sentryflow-image:
+    needs: [ files-changed ]
+    if: ${{ github.repository == '5GSEC/sentryflow' && needs.files-changed.outputs.sentryflow == 'true' }}
+    name: Build and push sentryflow's image
+    uses: ./.github/workflows/release-image.yaml
+    with:
+      WORKING_DIRECTORY: ./sentryflow
+      NAME: sentryflow
+    secrets: inherit
+
+  release-envoy-filter-image:
+    needs: [ files-changed ]
+    if: ${{ github.repository == '5GSEC/sentryflow' && needs.files-changed.outputs.envoyfilter == 'true' }}
+    name: Build and push envoyfilter's image
+    uses: ./.github/workflows/release-image.yaml
+    with:
+      WORKING_DIRECTORY: ./filter/envoy/envoy-wasm-filters
+      NAME: sentryflow-httpfilter
+    secrets: inherit

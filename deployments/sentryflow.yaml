@@ -65,7 +65,7 @@ data:
       server:
         port: 8081
       envoy:
-        uri: anuragrajawat/httpfilter:v0.1
+        uri: 5gsec/sentryflow-httpfilter:latest
 
     receivers:
       serviceMeshes:
@@ -96,8 +96,8 @@ spec:
       serviceAccountName: sentryflow
       containers:
         - name: sentryflow
-          image: docker.io/5gsec/sentryflow:v0.1
-          imagePullPolicy: IfNotPresent
+          image: docker.io/5gsec/sentryflow:latest
+          imagePullPolicy: Always
           args:
             - --config
             - /var/lib/sentryflow/config.yaml
