@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "sentryflow.fullname" . }}-test-connection"
+  labels:
+    {{- include "sentryflow.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: [ 'wget' ]
+      args: [ '{{ include "sentryflow.fullname" . }}:{{ index .Values.service.ports 1 "port" }}/healthz' ]
+  restartPolicy: Never

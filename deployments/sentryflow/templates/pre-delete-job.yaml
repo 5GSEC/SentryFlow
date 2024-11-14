@@ -1,0 +1,77 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sentryflow-pre-deletion-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+rules:
+  - apiGroups:
+      - apps
+    verbs:
+      - get
+      - patch
+    resources:
+      - deployments
+      - deployments/scale
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sentryflow-pre-deletion-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-4"
+    "helm.sh/hook-delete-policy": hook-succeeded
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sentryflow-pre-deletion-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-3"
+    "helm.sh/hook-delete-policy": hook-succeeded
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sentryflow-pre-deletion-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: sentryflow-pre-deletion-cleanup
+    namespace: {{ .Release.Namespace }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sentryflow-pre-deletion-cleanup
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-2"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      name: "{{ .Release.Name }}"
+      labels:
+        app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+        app.kubernetes.io/instance: {{ .Release.Name | quote }}
+        helm.sh/chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    spec:
+      serviceAccountName: sentryflow-pre-deletion-cleanup
+      restartPolicy: Never
+      containers:
+        - name: pre-deletion-cleanup
+          image: "bitnami/kubectl:1.30"
+          imagePullPolicy: IfNotPresent
+          command:
+            - kubectl
+            - -n
+            - {{ .Release.Namespace }}
+            - scale
+            - deploy
+            - {{ include "sentryflow.fullname" . }}
+            - --replicas
+            - "0"
