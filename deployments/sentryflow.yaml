@@ -55,7 +55,7 @@ subjects:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config
+  name: sentryflow
   namespace: sentryflow
   labels:
     app.kubernetes.io/part-of: sentryflow

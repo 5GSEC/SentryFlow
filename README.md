@@ -1,8 +1,7 @@
 # SentryFlow
 
-[![SentryFlow Docker Build](https://github.com/5gsec/sentryflow/actions/workflows/release.yml/badge.svg)](https://github.com/5gsec/sentryflow/actions/workflows/release.yml) [![CI for SentryFlow](https://github.com/5gsec/sentryflow/actions/workflows/ci-test-go.yml/badge.svg)](https://github.com/5gsec/sentryflow/actions/workflows/ci-test-go.yml) [![CI for AI Engine](https://github.com/5gsec/sentryflow/actions/workflows/ci-test-py.yml/badge.svg)](https://github.com/5gsec/sentryflow/actions/workflows/ci-test-py.yml)
-
-SentryFlow is a cloud-native system for API observability and security, specializing in log collection, metric production, and data exportation.
+SentryFlow is a cloud-native system for API observability, specializing in log collection, and data
+exportation.
 
 ## Architecture Overview
 
@@ -10,17 +9,13 @@ SentryFlow is a cloud-native system for API observability and security, speciali
 
 ### Features
 
-- Generation of API Access Logs
-- Production of API Metrics
-- AI-driven API Classification (Inference)
+- API access observability
+
+[//]: # (- Production of API Metrics)
+
+[//]: # (- AI-driven API Classification &#40;Inference&#41;)
 
 ## Documentation
 
-### Basic Information
-
 - [Getting Started](docs/getting_started.md)
-- [Use Cases](examples/README.md)
-
-### Contribution
-
-- [Contribution Guide](contribution/README.md)
+- [Contribution Guide](docs/CONTRIBUTING.md)
