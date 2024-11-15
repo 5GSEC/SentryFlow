@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentryflow
+  labels:
+    {{- include "sentryflow.labels" . | nindent 4 }}
+    {{- with .Values.genericLabels }}
+        {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- with .Values.config }}
+data:
+  config.yaml: |2-
+    {{- toYaml . | nindent 4 }}
+{{- end }}
