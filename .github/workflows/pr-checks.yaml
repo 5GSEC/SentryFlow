@@ -73,6 +73,9 @@ jobs:
           args: --timeout=10m --out-format=line-number
           skip-cache: true # https://github.com/golangci/golangci-lint-action/issues/244#issuecomment-1052197778
 
+      - name: unit tests
+        run: make test
+
   build-sentryflow-image:
     needs: [ files-changed ]
     if: ${{ github.repository == '5GSEC/sentryflow' && needs.files-changed.outputs.sentryflow == 'true' }}
