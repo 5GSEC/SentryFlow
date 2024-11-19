@@ -15,7 +15,7 @@ func TestConfig_validate(t *testing.T) {
 	type fields struct {
 		Filters   *filters
 		Receivers *receivers
-		Exporter  *base
+		Exporter  *exporterConfig
 	}
 	tests := []struct {
 		name               string
@@ -28,16 +28,15 @@ func TestConfig_validate(t *testing.T) {
 			fields: fields{
 				Filters: nil,
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -54,16 +53,15 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -83,7 +81,7 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
@@ -107,15 +105,14 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
+				Exporter: &exporterConfig{
 					Grpc: nil,
 				},
 			},
@@ -134,52 +131,19 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "gRPC exporter without port",
-					Grpc: &endpoint{},
+				Exporter: &exporterConfig{
+					Grpc: &server{},
 				},
 			},
 			wantErr:            true,
 			expectedErrMessage: "no exporter's gRPC port provided",
-		},
-		{
-			name: "with HTTP exporter should return error",
-			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
-						Uri: "5gsec/http-filter:v0.1",
-					},
-					Server: &server{
-						Port: SentryFlowDefaultFilterServerPort,
-					},
-				},
-				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
-						{
-							Name:      "istio-sidecar",
-							Namespace: "istio-system",
-						},
-					},
-				},
-				Exporter: &base{
-					Name: "unsupported HTTP exporter",
-					Grpc: &endpoint{
-						Port: 11111,
-					},
-					Http: &endpoint{
-						Port: 65432,
-					},
-				},
-			},
-			wantErr:            true,
-			expectedErrMessage: "http exporter is not supported",
 		},
 		{
 			name: "with nil receiver config should return error",
@@ -193,9 +157,8 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: nil,
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -215,15 +178,14 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -243,15 +205,14 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name: "istio-sidecar",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -271,16 +232,15 @@ func TestConfig_validate(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Name: "default gRPC exporter",
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 11111,
 					},
 				},
@@ -338,15 +298,15 @@ func TestNew(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 8080,
 					},
 				},
@@ -378,15 +338,15 @@ func TestNew(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 8080,
 					},
 				},
@@ -409,15 +369,15 @@ func TestNew(t *testing.T) {
 					},
 				},
 				Receivers: &receivers{
-					ServiceMeshes: []*serviceMesh{
+					ServiceMeshes: []*nameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &base{
-					Grpc: &endpoint{
+				Exporter: &exporterConfig{
+					Grpc: &server{
 						Port: 8080,
 					},
 				},

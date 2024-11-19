@@ -13,10 +13,10 @@ observability. It includes detailed commands for each step along with their expl
 
 ## 2. Deploying SentryFlow
 
-Configure SentryFlow receiver by following [this](receivers.md). Then deploy SentryFlow by following `kubectl` command:
+Configure SentryFlow receiver by following [this](receivers.md). Then deploy updated SentryFlow manifest by following `kubectl` command:
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/5GSEC/SentryFlow/refs/heads/main/deployments/sentryflow.yaml
+kubectl apply -f sentryflow.yaml
 ```
 
 This will create a namespace named `sentryflow` and will deploy the necessary Kubernetes resources.

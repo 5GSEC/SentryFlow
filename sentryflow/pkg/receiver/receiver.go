@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/5GSEC/SentryFlow/pkg/config"
+	"github.com/5GSEC/SentryFlow/pkg/receiver/other/nginx/nginxinc"
 	istiosidecar "github.com/5GSEC/SentryFlow/pkg/receiver/svcmesh/istio/sidecar"
 	"github.com/5GSEC/SentryFlow/pkg/util"
 	protobuf "github.com/5GSEC/SentryFlow/protobuf/golang"
@@ -21,7 +22,7 @@ import (
 // starts monitoring from configured sources and supports adding other sources in
 // the future.
 func Init(ctx context.Context, k8sClient client.Client, cfg *config.Config, apiEvents chan *protobuf.APIEvent, server *grpc.Server, wg *sync.WaitGroup) error {
-	//logger := util.LoggerFromCtx(ctx).Named("receiver")
+	logger := util.LoggerFromCtx(ctx).Named("receiver")
 
 	for _, serviceMesh := range cfg.Receivers.ServiceMeshes {
 		if serviceMesh.Name != "" {
@@ -38,12 +39,22 @@ func Init(ctx context.Context, k8sClient client.Client, cfg *config.Config, apiE
 		}
 	}
 
-	// Placeholder for other sources (To be implemented based on requirements)
-	// TODO: Implement initialization for other telemetry sources based on the
-	// `cfg.Others` configuration.
-	//	This would involve handling gRPC or HTTP configs
-	// for each supported source type and potentially adding new subdirectories in
-	// `pkg/receiver/other` for each source.
+	for _, other := range cfg.Receivers.Others {
+		if other.Name != "" {
+			switch other.Name {
+			case util.NginxWebServer:
+				logger.Info("Started nginx webserver receiver")
+			case util.NginxIncorporationIngressController:
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					nginxinc.Start(ctx, cfg, k8sClient)
+				}()
+			default:
+				return fmt.Errorf("unsupported receiver, %v", other.Name)
+			}
+		}
+	}
 
 	return nil
 }

@@ -12,12 +12,14 @@ import (
 type LoggerContextKey struct{}
 
 const (
-	ServiceMeshIstioSidecar = "istio-sidecar"
-	ServiceMeshIstioAmbient = "istio-ambient"
-	ServiceMeshKong         = "kong"
-	ServiceMeshConsul       = "consul"
-	ServiceMeshLinkerd      = "linkerd"
-	OpenTelemetry           = "otel"
+	ServiceMeshIstioSidecar             = "istio-sidecar"
+	ServiceMeshIstioAmbient             = "istio-ambient"
+	ServiceMeshKong                     = "kong"
+	ServiceMeshConsul                   = "consul"
+	ServiceMeshLinkerd                  = "linkerd"
+	OpenTelemetry                       = "otel"
+	NginxWebServer                      = "nginx-webserver"
+	NginxIncorporationIngressController = "nginx-inc-ingress-controller" // https://github.com/nginxinc/kubernetes-ingress/
 )
 
 func LoggerFromCtx(ctx context.Context) *zap.SugaredLogger {

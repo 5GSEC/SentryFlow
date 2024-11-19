@@ -5,22 +5,28 @@ filters:
   server:
     port: 8081
 
-  envoy:
-    uri: 5gsec/sentryflow-httpfilter:latest
+# Envoy filter is required for `istio-sidecar` service-mesh receiver.
+#  envoy:
+#    uri: 5gsec/sentryflow-httpfilter:latest
+
+#  Following is required for `nginx-inc-ingress-controller` receiver.
+#  nginxIngress:
+#    deploymentName: nginx-ingress-controller
+#    configMapName: nginx-ingress
+#    sentryFlowNjsConfigMapName: sentryflow-njs
 
 receivers: # aka sources
-  serviceMeshes:
-    - name: istio-sidecar
-      namespace: istio-system
-  others: # TBD
-    - name: "coroot"
-      # Either gRPC or HTTP not both
-      grpc:
-        url: localhost
-        port: 1234
-      http:
-        url: localhost
-        port: 4321
+# Uncomment the following receivers according to your requirement.
+
+#  serviceMeshes:
+#    - name: istio-sidecar
+#      namespace: istio-system
+
+#  others:
+#    - name: nginx-inc-ingress-controller
+#      namespace: default
+
+#    - name: nginx-webserver
 
 exporter:
   grpc:
