@@ -1,0 +1,32 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2024 Authors of SentryFlow
+#
+#kmux:
+#  sink:
+#    stream: rabbitmq
+
+rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  username: ""
+  password: ""
+  exchange:
+    name: sentryflow
+    type: direct
+    durable: true
+    auto-delete: true
+  queueName: test
+
+database:
+  logLevel: debug
+  uri: mongodb://127.0.0.1:27017/?directConnection=true
+  user: speculator
+  password: speculator
+  name: speculator
+
+#stateBackupFileName: testfile
+
+#  tls:
+#    enabled: false
+#    cert-file: ""
+#    skip-verify: false
