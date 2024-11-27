@@ -52,3 +52,39 @@ jobs:
       WORKING_DIRECTORY: filter/envoy/envoy-wasm-filters
       NAME: sentryflow-httpfilter
     secrets: inherit
+
+  update-image-tags-in-helm-charts:
+    if: github.repository == '5GSEC/sentryflow'
+    needs: [ release-sentryflow-image ]
+    permissions:
+      pull-requests: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Get tag
+        id: tag
+        run: |
+          if [ ${{ github.ref }} == "refs/heads/main" ]; then
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update images tag
+        run: |
+          ./hack/update-image-tag.sh ${{ steps.tag.outputs.tag }}
+
+      - name: Create PR to update images tag in Helm charts
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: update-helm-${{ steps.tag.outputs.tag }}
+          commit-message: "[skip ci] Update Helm Chart To ${{ steps.tag.outputs.tag }}"
+          committer: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          author: "github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          title: "[skip ci] Update Helm Chart To ${{ steps.tag.outputs.tag }}"
+          base: main
+          signoff: true
+          delete-branch: true

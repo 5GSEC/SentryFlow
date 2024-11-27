@@ -1,0 +1,143 @@
+# Default values for SentryFlow.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: docker.io/5gsec/sentryflow
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: latest
+
+# Arguments to pass SentryFlow container
+args:
+  - --config
+  - /var/lib/sentryflow/config.yaml
+  # Uncomment the following to turn on debug mode
+#  - --development
+#  - "true"
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+genericLabels:
+  app.kubernetes.io/part-of: sentryflow
+
+podSecurityContext:
+  fsGroup: 2000
+  runAsNonRoot: true
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  ports:
+    - name: exporter
+      port: 8888 # Make sure to use the same port as `.exporter.grpc.port` field of `config`
+      targetPort: 8888  # Make sure to use the same port as `.filters.server.port` field of `config`
+      protocol: TCP
+    - name: receiver
+      port: 9999 # Make sure to use the same port as `.filters.server.port` field of `config`
+      targetPort: 9999 # Make sure to use the same port as `.filters.server.port` field of `config`
+      protocol: TCP
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 500m
+    memory: 256Mi
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: receiver
+    httpHeaders:
+      - name: status
+        value: "200"
+readinessProbe:
+  httpGet:
+    path: /healthz
+    port: receiver
+    httpHeaders:
+      - name: status
+        value: "200"
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Traffic sources configuration
+config:
+  filters:
+    server:
+      port: 9999
+
+    # Envoy filter is required for `istio-sidecar` service-mesh receiver.
+    # Uncomment the following if you want to use `istio-sidecar` traffic source
+#    envoy:
+#      uri: 5gsec/sentryflow-httpfilter:latest
+
+  #  Following is required for `nginx-inc-ingress-controller` receiver.
+  # Uncomment the following if you want to use `nginx-inc-ingress-controller` traffic source
+  #  nginxIngress:
+  #    deploymentName: nginx-ingress-controller
+  #    configMapName: nginx-ingress
+  #    sentryFlowNjsConfigMapName: sentryflow-njs
+
+  receivers: # aka sources
+    # Uncomment the following receivers according to your requirement.
+#    serviceMeshes:
+      # To get API observability from Istio service mesh uncomment the following
+#      - name: istio-sidecar
+#        namespace: istio-system
+
+  #  others:
+  # To get API observability from F5 nginx ingress controller uncomment the following
+  #    - name: nginx-inc-ingress-controller
+  #      namespace: default
+
+  #    - name: nginx-webserver
+
+  exporter:
+    grpc:
+      port: 8888
+
+volumes:
+  - name: sentryflow
+    configMap:
+      name: sentryflow
+      defaultMode: 420
+
+volumeMounts:
+  - name: sentryflow
+    mountPath: "/var/lib/sentryflow/"
+    readOnly: true
