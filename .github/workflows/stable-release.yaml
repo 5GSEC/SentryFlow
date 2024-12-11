@@ -15,27 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  files-changed:
-    name: Find out which files were changed
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    outputs:
-      sentryflow: ${{ steps.filter.outputs.sentryflow}}
-      envoyfilter: ${{ steps.filter.outputs.envoyfilter}}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3.0.2
-        id: filter
-        with:
-          filters: |
-            sentryflow:
-              - 'sentryflow/**'
-            envoyfilter:
-              - 'filter/envoy/envoy-wasm-filters/**'
-
   release-sentryflow-image:
-    needs: [ files-changed ]
-    if: ${{ github.repository == '5GSEC/sentryflow' && needs.files-changed.outputs.sentryflow == 'true' }}
+    if: ${{ github.repository == '5GSEC/sentryflow' }}
     name: Build and push sentryflow image
     uses: ./.github/workflows/release-image.yaml
     with:
@@ -44,8 +25,7 @@ jobs:
     secrets: inherit
 
   release-envoy-filter-image:
-    needs: [ files-changed ]
-    if: ${{ github.repository == '5GSEC/sentryflow' && needs.files-changed.outputs.envoyfilter == 'true' }}
+    if: ${{ github.repository == '5GSEC/sentryflow' }}
     name: Build and push envoyfilter's image
     uses: ./.github/workflows/release-image.yaml
     with:
@@ -54,7 +34,7 @@ jobs:
     secrets: inherit
 
   update-image-tags-in-helm-charts:
-    if: github.repository == '5GSEC/sentryflow'
+    if: ${{ github.repository == '5GSEC/sentryflow' }}
     needs: [ release-sentryflow-image ]
     permissions:
       pull-requests: write
