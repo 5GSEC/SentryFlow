@@ -8,7 +8,7 @@ if ! command -v addlicense >/dev/null; then
 fi
 
 GIT_ROOT=$(git rev-parse --show-toplevel)
-LICENSE_HEADER=${GIT_ROOT}/scripts/license.header
+LICENSE_HEADER=${GIT_ROOT}/hack/license.header
 
 if [ -z "$1" ]; then
   echo "No Argument Supplied, Checking and Fixing all files from project root"
