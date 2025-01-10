@@ -120,6 +120,22 @@ impl HttpContext for Plugin {
                 headers.insert(header.0, header.1);
             }
         }
+        headers.insert(
+            "query".to_string(),
+            String::from_utf8(
+                self.get_property(vec!["request", "query"])
+                    .unwrap_or_default(),
+            )
+            .unwrap_or_default(),
+        );
+        headers.insert(
+            ":path".to_string(),
+            String::from_utf8(
+                self.get_property(vec!["request", "url_path"])
+                    .unwrap_or_default(),
+            )
+            .unwrap_or_default(),
+        );
 
         self.api_event.metadata.timestamp = self
             .get_current_time()
