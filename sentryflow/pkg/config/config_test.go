@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"go.uber.org/zap"
+
+	"github.com/5GSEC/SentryFlow/pkg/util"
 )
 
 func TestConfig_validate(t *testing.T) {
@@ -165,6 +167,32 @@ func TestConfig_validate(t *testing.T) {
 			},
 			wantErr:            true,
 			expectedErrMessage: "no receiver configuration provided",
+		},
+		{
+			name: "with istio-sidecar svcmesh and without envoy URI should return error",
+			fields: fields{
+				Filters: &filters{
+					Envoy: nil,
+					Server: &server{
+						Port: SentryFlowDefaultFilterServerPort,
+					},
+				},
+				Receivers: &receivers{
+					ServiceMeshes: []*nameAndNamespace{
+						{
+							Name:      util.ServiceMeshIstioSidecar,
+							Namespace: "istio-system",
+						},
+					},
+				},
+				Exporter: &exporterConfig{
+					Grpc: &server{
+						Port: 11111,
+					},
+				},
+			},
+			wantErr:            true,
+			expectedErrMessage: "no envoy filter configuration provided for istio sidecar servicemesh",
 		},
 		{
 			name: "with empty service mesh name receiver should return error",
