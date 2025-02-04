@@ -8,20 +8,18 @@ import (
 	"fmt"
 	"sync"
 
-	"google.golang.org/grpc"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/5GSEC/SentryFlow/pkg/config"
 	"github.com/5GSEC/SentryFlow/pkg/receiver/other/nginx/nginxinc"
 	istiosidecar "github.com/5GSEC/SentryFlow/pkg/receiver/svcmesh/istio/sidecar"
 	"github.com/5GSEC/SentryFlow/pkg/util"
-	protobuf "github.com/5GSEC/SentryFlow/protobuf/golang"
 )
 
 // Init initializes the API event sources based on the provided configuration. It
 // starts monitoring from configured sources and supports adding other sources in
 // the future.
-func Init(ctx context.Context, k8sClient client.Client, cfg *config.Config, apiEvents chan *protobuf.APIEvent, server *grpc.Server, wg *sync.WaitGroup) error {
+func Init(ctx context.Context, k8sClient client.Client, cfg *config.Config, wg *sync.WaitGroup, lock *sync.Mutex) error {
 	logger := util.LoggerFromCtx(ctx).Named("receiver")
 
 	for _, serviceMesh := range cfg.Receivers.ServiceMeshes {
@@ -31,7 +29,7 @@ func Init(ctx context.Context, k8sClient client.Client, cfg *config.Config, apiE
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					istiosidecar.StartMonitoring(ctx, cfg, k8sClient)
+					istiosidecar.StartMonitoring(ctx, cfg, k8sClient, lock)
 				}()
 			default:
 				return fmt.Errorf("unsupported Service Mesh, %v", serviceMesh.Name)

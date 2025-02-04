@@ -4,15 +4,11 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/5GSEC/SentryFlow/pkg/core"
-	"github.com/5GSEC/SentryFlow/pkg/util"
 )
 
 var (
@@ -42,8 +38,7 @@ SentryFlow provides real-time monitoring of API calls made to and from your syst
 func run() {
 	initLogger(development)
 	logBuildInfo()
-	ctx := context.WithValue(ctrl.SetupSignalHandler(), util.LoggerContextKey{}, logger)
-	core.Run(ctx, configFilePath, kubeConfig)
+	core.Run(configFilePath, kubeConfig, logger)
 }
 
 func initLogger(development bool) {

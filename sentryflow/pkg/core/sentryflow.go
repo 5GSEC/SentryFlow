@@ -6,8 +6,13 @@ package core
 import (
 	"context"
 	"net/http"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
+	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"istio.io/client-go/pkg/apis/extensions/v1alpha1"
@@ -27,13 +32,17 @@ import (
 )
 
 type Manager struct {
-	Ctx        context.Context
-	Logger     *zap.SugaredLogger
-	GrpcServer *grpc.Server
-	HttpServer *http.Server
-	K8sClient  client.Client
-	Wg         *sync.WaitGroup
-	ApiEvents  chan *protobuf.APIEvent
+	Ctx                 context.Context
+	Logger              *zap.SugaredLogger
+	GrpcServer          *grpc.Server
+	HttpServer          *http.Server
+	K8sClient           client.Client
+	Wg                  *sync.WaitGroup
+	ApiEvents           chan *protobuf.APIEvent
+	configChan          chan *config.Config
+	receiversCtx        context.Context
+	receiversCancelFunc context.CancelFunc
+	receiversLock       *sync.Mutex
 }
 
 func (m *Manager) areK8sReceivers(cfg *config.Config) bool {
@@ -50,64 +59,76 @@ func (m *Manager) areK8sReceivers(cfg *config.Config) bool {
 	return false
 }
 
-func Run(ctx context.Context, configFilePath string, kubeConfig string) {
-	mgr := &Manager{
-		Ctx:        ctx,
-		Logger:     util.LoggerFromCtx(ctx),
-		GrpcServer: grpc.NewServer(),
-		Wg:         &sync.WaitGroup{},
-		ApiEvents:  make(chan *protobuf.APIEvent, 10240),
-	}
-	mgr.Logger.Info("Starting SentryFlow")
+func (m *Manager) run(cfg *config.Config, kubeConfig string) {
+	m.Ctx, _ = m.setupSignalHandler(make(chan os.Signal, 2))
+	m.GrpcServer = grpc.NewServer()
+	m.Wg = &sync.WaitGroup{}
+	m.ApiEvents = make(chan *protobuf.APIEvent, 10240)
 
-	cfg, err := config.New(configFilePath, mgr.Logger)
-	if err != nil {
-		mgr.Logger.Error(err)
-		return
-	}
-
-	if mgr.areK8sReceivers(cfg) {
+	if m.areK8sReceivers(cfg) {
 		k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
 		if err != nil {
-			mgr.Logger.Errorf("failed to create k8s client: %v", err)
+			m.Logger.Errorf("failed to create k8s client: %v", err)
 			return
 		}
-		mgr.K8sClient = k8sClient
+		m.K8sClient = k8sClient
 	}
 
-	mgr.Wg.Add(1)
+	m.Wg.Add(1)
 	go func() {
-		defer mgr.Wg.Done()
-		mgr.startHttpServer(cfg.Filters.Server.Port)
+		defer m.Wg.Done()
+		m.startHttpServer(cfg.Filters.Server.Port)
 	}()
 
-	if err := receiver.Init(mgr.Ctx, mgr.K8sClient, cfg, mgr.ApiEvents, mgr.GrpcServer, mgr.Wg); err != nil {
-		mgr.Logger.Errorf("failed to initialize receiver: %v", err)
+	m.receiversCtx, m.receiversCancelFunc = m.setupSignalHandler(make(chan os.Signal, 2))
+	if err := receiver.Init(m.receiversCtx, m.K8sClient, cfg, m.Wg, m.receiversLock); err != nil {
+		m.Logger.Errorf("failed to initialize receiver: %v", err)
 		return
 	}
 
-	if err := exporter.Init(mgr.Ctx, mgr.GrpcServer, cfg, mgr.ApiEvents, mgr.Wg); err != nil {
-		mgr.Logger.Errorf("failed to initialize exporter: %v", err)
+	if err := exporter.Init(m.Ctx, m.GrpcServer, cfg, m.ApiEvents, m.Wg); err != nil {
+		m.Logger.Errorf("failed to initialize exporter: %v", err)
 		return
 	}
 
-	mgr.Wg.Add(1)
+	m.Wg.Add(1)
 	go func() {
-		defer mgr.Wg.Done()
-		mgr.startGrpcServer(cfg.Exporter.Grpc.Port)
+		defer m.Wg.Done()
+		m.startGrpcServer(cfg.Exporter.Grpc.Port)
 	}()
 
-	mgr.Logger.Info("Started SentryFlow")
+	m.Logger.Info("Started SentryFlow")
 
-	<-ctx.Done()
-	mgr.Logger.Info("Shutdown Signal Received. Waiting for all workers to finish.")
-	mgr.Logger.Info("Shutting down SentryFlow")
+	for {
+		select {
+		case <-m.Ctx.Done():
+			m.Logger.Info("Shutdown Signal Received. Waiting for all workers to finish.")
+			m.Logger.Info("Shutting down SentryFlow")
+			m.receiversCancelFunc()
+			m.stopServers()
+			m.Wg.Wait()
+			close(m.ApiEvents)
+			close(m.configChan)
+			m.Logger.Info("All workers finished. Stopped SentryFlow")
+			return
 
-	mgr.stopServers()
-	mgr.Wg.Wait()
-	close(mgr.ApiEvents)
-
-	mgr.Logger.Info("All workers finished. Stopped SentryFlow")
+		case updatedConfig := <-m.configChan:
+			m.receiversCancelFunc()
+			if m.areK8sReceivers(updatedConfig) {
+				k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
+				if err != nil {
+					m.Logger.Errorf("failed to create k8s client: %v", err)
+					return
+				}
+				m.K8sClient = k8sClient
+			}
+			m.receiversCtx, m.receiversCancelFunc = m.setupSignalHandler(make(chan os.Signal, 2))
+			if err := receiver.Init(m.receiversCtx, m.K8sClient, updatedConfig, m.Wg, m.receiversLock); err != nil {
+				m.Logger.Errorf("failed to initialize receiver: %v", err)
+				return
+			}
+		}
+	}
 }
 
 func registerAndGetScheme() *runtime.Scheme {
@@ -117,4 +138,50 @@ func registerAndGetScheme() *runtime.Scheme {
 	utilruntime.Must(appsv1.AddToScheme(scheme))
 	utilruntime.Must(v1alpha1.AddToScheme(scheme))
 	return scheme
+}
+
+func (m *Manager) watchConfig(configFilePath string, logger *zap.SugaredLogger) {
+	viper.WatchConfig()
+	viper.OnConfigChange(func(e fsnotify.Event) {
+		cfg, err := config.New(configFilePath, logger)
+		if err != nil {
+			m.Logger.Errorf("failed to reload config, %v", err)
+			return
+		}
+		m.configChan <- cfg
+		m.Logger.Info("config file changed, reloading config...")
+	})
+}
+
+func (m *Manager) setupSignalHandler(c chan os.Signal) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(context.Background())
+	ctx = context.WithValue(ctx, util.LoggerContextKey{}, m.Logger)
+
+	shutdownSignals := []os.Signal{os.Interrupt, syscall.SIGTERM}
+	signal.Notify(c, shutdownSignals...)
+	go func() {
+		<-c
+		cancel()
+		<-c
+		os.Exit(1) // second signal. Exit directly.
+	}()
+	return ctx, cancel
+}
+
+func Run(configFilePath string, kubeConfig string, logger *zap.SugaredLogger) {
+	mgr := &Manager{
+		Logger:        logger,
+		configChan:    make(chan *config.Config),
+		receiversLock: &sync.Mutex{},
+	}
+	mgr.Logger.Info("Starting SentryFlow")
+
+	cfg, err := config.New(configFilePath, mgr.Logger)
+	if err != nil {
+		mgr.Logger.Error(err)
+		return
+	}
+	mgr.watchConfig(configFilePath, logger)
+
+	mgr.run(cfg, kubeConfig)
 }

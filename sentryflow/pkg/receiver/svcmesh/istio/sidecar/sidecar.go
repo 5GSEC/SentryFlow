@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync"
 	"text/template"
 
 	_struct "github.com/golang/protobuf/ptypes/struct"
@@ -41,20 +42,25 @@ type envoyFilterData struct {
 // StartMonitoring begins monitoring API calls within the Istio (sidecar based)
 // service mesh deployed in a Kubernetes cluster. It achieves this by creating a
 // custom EnvoyFilter resource in Kubernetes.
-func StartMonitoring(ctx context.Context, cfg *config.Config, k8sClient client.Client) {
+func StartMonitoring(ctx context.Context, cfg *config.Config, k8sClient client.Client, lock *sync.Mutex) {
 	logger := util.LoggerFromCtx(ctx).Named("istio-sidecar")
-
 	logger.Info("Starting istio sidecar mesh monitoring")
 
+	lock.Lock()
 	if err := createResources(ctx, cfg, k8sClient); err != nil {
 		logger.Error(err)
+		lock.Unlock()
 		return
 	}
 	logger.Info("Started istio sidecar mesh monitoring")
+	lock.Unlock()
 
 	<-ctx.Done()
 	logger.Info("Shutting down istio sidecar mesh monitoring")
+
+	lock.Lock()
 	doCleanup(logger, k8sClient, getIstioRootNamespaceFromConfig(cfg))
+	lock.Unlock()
 
 	logger.Info("Stopped istio sidecar mesh monitoring")
 }

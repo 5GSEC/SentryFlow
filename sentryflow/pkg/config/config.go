@@ -89,6 +89,9 @@ func (c *Config) validate() error {
 		if svcMesh.Namespace == "" {
 			return fmt.Errorf("no service mesh namespace provided")
 		}
+		if svcMesh.Name == util.ServiceMeshIstioSidecar && c.Filters.Envoy == nil {
+			return fmt.Errorf("no envoy filter configuration provided for istio sidecar servicemesh")
+		}
 	}
 
 	for _, other := range c.Receivers.Others {
