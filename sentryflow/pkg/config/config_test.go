@@ -13,9 +13,9 @@ import (
 
 func TestConfig_validate(t *testing.T) {
 	type fields struct {
-		Filters   *filters
-		Receivers *receivers
-		Exporter  *exporterConfig
+		Filters   *Filters
+		Receivers *Receivers
+		Exporter  *ExporterConfig
 	}
 	tests := []struct {
 		name               string
@@ -27,16 +27,16 @@ func TestConfig_validate(t *testing.T) {
 			name: "with nil filter config should return error",
 			fields: fields{
 				Filters: nil,
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -47,21 +47,21 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with empty envoy URI in filter should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "",
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -72,16 +72,16 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with nil exporter config should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
@@ -96,23 +96,23 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with nil exporter gRPC config should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
+				Exporter: &ExporterConfig{
 					Grpc: nil,
 				},
 			},
@@ -122,24 +122,24 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "without exporter's gRPC port config should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{},
+				Exporter: &ExporterConfig{
+					Grpc: &Server{},
 				},
 			},
 			wantErr:            true,
@@ -148,17 +148,17 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with nil receiver config should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
 				Receivers: nil,
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -169,23 +169,23 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with empty service mesh name receiver should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -196,23 +196,23 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with empty service mesh namespace receiver should return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name: "istio-sidecar",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -223,24 +223,24 @@ func TestConfig_validate(t *testing.T) {
 		{
 			name: "with valid config should not return error",
 			fields: fields{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "5gsec/http-filter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: SentryFlowDefaultFilterServerPort,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 11111,
 					},
 				},
@@ -289,24 +289,24 @@ func TestNew(t *testing.T) {
 				logger:         logger,
 			},
 			want: &Config{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "anuragrajawat/httpfilter:v0.1",
 					},
-					Server: &server{
+					Server: &Server{
 						Port: 8081,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 8080,
 					},
 				},
@@ -329,24 +329,24 @@ func TestNew(t *testing.T) {
 				logger:         logger,
 			},
 			want: &Config{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "anuragrajawat/httpfilter:v0.1",
 					},
-					Server: &server{
-						Port: 8081,
+					Server: &Server{
+						Port: 9999,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 8080,
 					},
 				},
@@ -360,24 +360,24 @@ func TestNew(t *testing.T) {
 				logger:         logger,
 			},
 			want: &Config{
-				Filters: &filters{
-					Envoy: &envoyFilterConfig{
+				Filters: &Filters{
+					Envoy: &EnvoyFilterConfig{
 						Uri: "anuragrajawat/httpfilter:v0.1",
 					},
-					Server: &server{
-						Port: 8081,
+					Server: &Server{
+						Port: 9999,
 					},
 				},
-				Receivers: &receivers{
-					ServiceMeshes: []*nameAndNamespace{
+				Receivers: &Receivers{
+					ServiceMeshes: []*NameAndNamespace{
 						{
 							Name:      "istio-sidecar",
 							Namespace: "istio-system",
 						},
 					},
 				},
-				Exporter: &exporterConfig{
-					Grpc: &server{
+				Exporter: &ExporterConfig{
+					Grpc: &Server{
 						Port: 8080,
 					},
 				},

@@ -19,18 +19,26 @@ import (
 
 func Start(ctx context.Context, cfg *config.Config, k8sClient client.Client) {
 	logger := util.LoggerFromCtx(ctx)
+	defer doCleanup(logger, cfg, k8sClient)
 
 	logger.Info("Starting nginx-incorporation ingress controller receiver")
+
+	if autoConfigure(cfg) {
+		logger.Warn("nginx inc ingress deployment will restart")
+		if err := deployResources(ctx, k8sClient, cfg); err != nil {
+			logger.Errorf("failed to configure resources for nginx inc ingress receiver: %v", err)
+			return
+		}
+		logger.Info("successfully configured nginx-incorporation ingress controller")
+	}
+
 	if err := validateResources(ctx, cfg, k8sClient); err != nil {
-		// Todo(@anurag-rajawat): Log docs link for reference on how to configure this receiver properly.
 		logger.Errorf("%v. Stopped nginx-incorporation ingress controller receiver", err)
 		return
 	}
 	logger.Info("Started nginx-incorporation ingress controller receiver")
 
 	<-ctx.Done()
-	logger.Info("Shutting down nginx-incorporation ingress controller receiver")
-	logger.Info("Stopped nginx-incorporation ingress controller receiver")
 }
 
 func validateResources(ctx context.Context, cfg *config.Config, k8sClient client.Client) error {
@@ -105,32 +113,32 @@ func validateIngressDeployAndConfigMap(ctx context.Context, cfg *config.Config, 
 	if !exists {
 		return fmt.Errorf("sentryflow http-snippets not found in nginx-incorporation ingress configmap")
 	}
-	expectedHttpSnippets := `js_path "/etc/nginx/njs/";
+	expectedHttpSnippets := strings.TrimSpace(`js_path "/etc/nginx/njs/";
 subrequest_output_buffer_size 8k;
 js_shared_dict_zone zone=apievents:1M timeout=300s evict;
 js_import main from sentryflow.js;
-`
+`)
 	if !strings.Contains(httpSnippets, expectedHttpSnippets) {
-		return fmt.Errorf("sentryflow http-snippets were not properly configured in nginx-incorporation ingress configmap")
+		return fmt.Errorf("sentryflow http-snippets were not properly configured in nginx-incorporation ingress configmap.\nGOT\n%v, \nEXPECTED\n%v", httpSnippets, expectedHttpSnippets)
 	}
 
 	locationSnippets, exists := ingressCm.Data["location-snippets"]
 	if !exists {
 		return fmt.Errorf("sentryflow location-snippets not found in nginx-incorporation ingress configmap")
 	}
-	expectedLocationSnippets := `js_body_filter main.requestHandler buffer_type=buffer;
+	expectedLocationSnippets := strings.TrimSpace(`js_body_filter main.requestHandler buffer_type=buffer;
 mirror      /mirror_request;
 mirror_request_body on;
-`
+`)
 	if !strings.Contains(locationSnippets, expectedLocationSnippets) {
-		return fmt.Errorf("sentryflow location-snippets were not properly configured in nginx-incorporation ingress configmap")
+		return fmt.Errorf("sentryflow location-snippets were not properly configured in nginx-incorporation ingress configmap.\nGOT\n%v, \nEXPECTED\n%v", locationSnippets, expectedLocationSnippets)
 	}
 
 	serverSnippets, exists := ingressCm.Data["server-snippets"]
 	if !exists {
 		return fmt.Errorf("sentryflow server-snippets not found in nginx-incorporation ingress configmap")
 	}
-	expectedServerSnippets := `location /mirror_request {
+	expectedServerSnippets := strings.TrimSpace(`location /mirror_request {
   internal;
   js_content main.dispatchHttpCall;
 }
@@ -140,11 +148,11 @@ location /sentryflow {
   proxy_set_header accept "application/json";
   proxy_set_header Content-Type "application/json";
 }
-`
+`)
 	// The server snippet might have different SentryFlow URL in `proxy_pass`
 	// directive. To avoid potential conflicts, check without that directive.
 	if !strings.ContainsAny(serverSnippets, expectedServerSnippets) {
-		return fmt.Errorf("sentryflow server-snippets were not properly configured in nginx-incorporation ingress configmap")
+		return fmt.Errorf("sentryflow server-snippets were not properly configured in nginx-incorporation ingress configmap.\nGOT\n%v, \nEXPECTED\n%v", serverSnippets, expectedServerSnippets)
 	}
 
 	return nil

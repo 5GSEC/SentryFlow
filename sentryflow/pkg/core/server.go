@@ -80,6 +80,7 @@ func (m *Manager) eventsHandler(writer http.ResponseWriter, request *http.Reques
 
 	m.ApiEvents <- apiEvent
 	writer.WriteHeader(http.StatusAccepted)
+	m.Logger.Debug(apiEvent)
 }
 
 func (m *Manager) healthzHandler(writer http.ResponseWriter, request *http.Request) {
