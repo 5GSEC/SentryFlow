@@ -70,26 +70,35 @@ Here is the sample [nginx.conf](../../../../../filter/nginx/nginx.conf) file for
 $ sudo nginx -s reload
 ```
 
-4. Update the `.receivers` configuration in `sentryflow` [configmap](../../../../deployments/sentryflow.yaml) as
-   follows:
+4. Deploy SentryFlow
 
-  ```yaml
-  filters:
-    server:
-      port: 8081
+- Add SentryFlow repo
 
-  receivers:
-    others:
-      - name: nginx-webserver # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
-    ...
-  ```
+```shell
+helm repo add 5gsec https://5gsec.github.io/charts
+helm repo update 5gsec
+```
 
-5. Deploy SentryFlow
+- Update `values.yaml` file as follows.
 
-  ```shell
-  kubectl apply -f sentryflow.yaml
-  ```
+```shell
+helm show values 5gsec/sentryflow > values.yaml
+```
 
-6. Trigger API calls to generate traffic.
+```yaml
+filters:
+  server:
+# Existing snippets
+receivers:
+  others:
+    - name: nginx-webserver # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
+    # Existing snippets
+```
 
-7. Use SentryFlow [log client](../../../../client) to see the API Events.
+- Deploy SentryFlow
+
+```shell
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
+```
+
+5. Trigger API calls to generate traffic.
