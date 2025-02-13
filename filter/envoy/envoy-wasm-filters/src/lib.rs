@@ -33,7 +33,8 @@ struct APIEvent {
 struct Metadata {
     context_id: u32,
     timestamp: u64,
-    istio_version: String,
+    receiver_name: String,
+    receiver_version: String,
     mesh_id: String,
     node_name: String,
 }
@@ -255,11 +256,17 @@ fn update_metadata(obj: &mut Plugin) {
             .unwrap_or_default(),
     )
     .unwrap_or_default();
-    obj.api_event.metadata.istio_version = String::from_utf8(
+
+    let istio_version: String = String::from_utf8(
         obj.get_property(vec!["node", "metadata", "ISTIO_VERSION"])
             .unwrap_or_default(),
     )
     .unwrap_or_default();
+
+    if !istio_version.is_empty() {
+        obj.api_event.metadata.receiver_version = istio_version;
+        obj.api_event.metadata.receiver_name = "Istio".to_string();
+    }
 }
 
 fn get_url_and_port(address: String) -> (String, u16) {
