@@ -25,38 +25,40 @@ SentryFlow makes use of following to provide visibility into API calls:
 To Observe API calls of your workloads running on top of Istio Service Mesh in Kubernetes environment, follow the below
 steps:
 
-1. Download SentryFlow manifest file
-
-  ```shell
-  curl -sO https://raw.githubusercontent.com/5GSEC/SentryFlow/refs/heads/main/deployments/sentryflow.yaml
-  ```
-
-2. Update the `.receivers` configuration in `sentryflow` [configmap](../../../../deployments/sentryflow.yaml) as
-   follows:
-
-  ```yaml
-  filters:
-    server:
-      port: 8081
-
-    # Envoy filter is required for `istio-sidecar` service-mesh receiver.
-    # Leave it as it is unless you want to use your filter.
-    envoy:
-      uri: 5gsec/sentryflow-httpfilter:v0.1
-
-  receivers:
-    serviceMeshes:
-      - name: istio-sidecar # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
-        namespace: istio-system # Kubernetes namespace in which you've deployed Istio.
-    ...
-  ```
-
-3. Apply the updated manifest file:
+- Add SentryFlow repo
 
 ```shell
-kubectl apply -f sentryflow.yaml
+helm repo add 5gsec https://5gsec.github.io/charts
+helm repo update 5gsec
 ```
 
-3. Trigger API calls to generate traffic.
+- Update `values.yaml` file as follows.
 
-4. Use SentryFlow [log client](../../../../client) to see the API Events.
+```shell
+helm show values 5gsec/sentryflow > values.yaml
+```
+
+```yaml
+filters:
+  server:
+  # Existing snippets
+
+  # Envoy filter is required for `istio-sidecar` service-mesh receiver.
+  # Leave it as it is unless you want to use your filter.
+  envoy:
+    uri: 5gsec/sentryflow-httpfilter:latest
+
+receivers:
+  serviceMeshes:
+    - name: istio-sidecar # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
+      namespace: istio-system # Kubernetes namespace in which you've deployed Istio.
+  # Existing snippets
+```
+
+- Deploy SentryFlow
+
+```shell
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
+```
+
+- Trigger API calls to generate traffic.

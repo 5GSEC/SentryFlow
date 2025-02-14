@@ -20,7 +20,7 @@ Configure SentryFlow receiver by following [this](../../docs/receivers.md).
 ### Deploy SentryFlow
 
 ```shell
-helm install --values values.yaml sentryflow 5gsec/sentryflow-n sentryflow --create-namespace 
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
 ```
 
 Install SentryFlow using Helm charts locally (for testing)
