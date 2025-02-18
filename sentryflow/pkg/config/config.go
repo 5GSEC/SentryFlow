@@ -15,47 +15,48 @@ import (
 
 const (
 	DefaultConfigFilePath             = "config/default.yaml"
-	SentryFlowDefaultFilterServerPort = 8081
+	SentryFlowDefaultFilterServerPort = 9999
 )
 
-type nameAndNamespace struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace,omitempty"`
+type NameAndNamespace struct {
+	Name          string `json:"name"`
+	Namespace     string `json:"namespace,omitempty"`
+	AutoConfigure bool   `json:"autoconfigure,omitempty"`
 }
 
-type receivers struct {
-	ServiceMeshes []*nameAndNamespace `json:"serviceMeshes,omitempty"`
-	Others        []*nameAndNamespace `json:"other,omitempty"`
+type Receivers struct {
+	ServiceMeshes []*NameAndNamespace `json:"serviceMeshes,omitempty"`
+	Others        []*NameAndNamespace `json:"other,omitempty"`
 }
 
-type envoyFilterConfig struct {
+type EnvoyFilterConfig struct {
 	Uri string `json:"uri"`
 }
 
-type server struct {
+type Server struct {
 	Port uint16 `json:"port"`
 }
 
-type nginxIngressConfig struct {
+type NginxIngressConfig struct {
 	DeploymentName             string `json:"deploymentName"`
 	ConfigMapName              string `json:"configMapName"`
 	SentryFlowNjsConfigMapName string `json:"sentryFlowNjsConfigMapName"`
 }
 
-type filters struct {
-	Envoy        *envoyFilterConfig  `json:"envoy,omitempty"`
-	NginxIngress *nginxIngressConfig `json:"nginxIngress,omitempty"`
-	Server       *server             `json:"server,omitempty"`
+type Filters struct {
+	Envoy        *EnvoyFilterConfig  `json:"envoy,omitempty"`
+	NginxIngress *NginxIngressConfig `json:"nginxIngress,omitempty"`
+	Server       *Server             `json:"server,omitempty"`
 }
 
-type exporterConfig struct {
-	Grpc *server `json:"grpc"`
+type ExporterConfig struct {
+	Grpc *Server `json:"grpc"`
 }
 
 type Config struct {
-	Filters   *filters        `json:"filters"`
-	Receivers *receivers      `json:"receivers"`
-	Exporter  *exporterConfig `json:"exporter"`
+	Filters   *Filters        `json:"filters"`
+	Receivers *Receivers      `json:"receivers"`
+	Exporter  *ExporterConfig `json:"exporter"`
 }
 
 func (c *Config) validate() error {
@@ -137,7 +138,7 @@ func New(configFilePath string, logger *zap.SugaredLogger) (*Config, error) {
 		return nil, err
 	}
 	if config.Filters.Server == nil {
-		config.Filters.Server = &server{}
+		config.Filters.Server = &Server{}
 	}
 	if config.Filters.Server.Port == 0 {
 		config.Filters.Server.Port = SentryFlowDefaultFilterServerPort
@@ -148,11 +149,13 @@ func New(configFilePath string, logger *zap.SugaredLogger) (*Config, error) {
 		return nil, err
 	}
 
-	bytes, err := json.Marshal(config)
-	if err != nil {
-		logger.Errorf("Failed to marshal config file: %v", err)
+	if logger.Level() == zap.DebugLevel {
+		bytes, err := json.Marshal(config)
+		if err != nil {
+			logger.Errorf("Failed to marshal config file: %v", err)
+		}
+		logger.Debugf("Config: %s", string(bytes))
 	}
-	logger.Debugf("Config: %s", string(bytes))
 
 	return config, nil
 }

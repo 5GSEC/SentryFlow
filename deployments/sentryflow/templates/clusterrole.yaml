@@ -29,11 +29,19 @@ rules:
       - ""
     verbs:
       - get
+      - update
     resources:
       - configmaps
+  - apiGroups:
+      - ""
+    verbs:
+      - list
+    resources:
+      - services
   - apiGroups:
       - apps
     verbs:
       - get
+      - update
     resources:
       - deployments
