@@ -13,40 +13,21 @@ observability. It includes detailed commands for each step along with their expl
 
 ## 2. Deploying SentryFlow
 
-Configure SentryFlow receiver by following [this](receivers.md). Then deploy updated SentryFlow manifest by following `kubectl` command:
+- Add SentryFlow repo
 
 ```shell
-kubectl apply -f sentryflow.yaml
+helm repo add 5gsec https://5gsec.github.io/charts
+helm repo update 5gsec
 ```
 
-This will create a namespace named `sentryflow` and will deploy the necessary Kubernetes resources.
-
-Then, check if SentryFlow is up and running by:
+- Update `values.yaml` file as follows by following [this](receivers.md).
 
 ```shell
-$ kubectl -n sentryflow get pods
-NAME                         READY   STATUS    RESTARTS   AGE
-sentryflow-cff887bbd-rljm7   1/1     Running   0          73s
+helm show values 5gsec/sentryflow > values.yaml
 ```
 
-## 3. Deploying SentryFlow Clients
-
-SentryFlow has now been deployed in the cluster. In addition, SentryFlow exports API access logs through `gRPC`.
-
-For testing purposes, a client has been developed.
-
-- `log-client`: Simply logs everything on `STDOUT` coming from SentryFlow.
-
-It can be deployed into the cluster under namespace `sentryflow` by following the command:
+- Deploy SentryFlow
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/5GSEC/SentryFlow/refs/heads/main/deployments/sentryflow-client.yaml
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
 ```
-
-Then, check if it is up and running by:
-
-```shell
-kubectl get pods -n sentryflow
-```
-
-If you observe `log-client`, is running, the setup has been completed successfully.
