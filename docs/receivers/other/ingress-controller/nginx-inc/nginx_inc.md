@@ -18,9 +18,53 @@ SentryFlow make use of following to provide visibility into API calls:
 
 ## How to
 
-To Observe API calls of your workloads served by Nginx inc. ingress controller in Kubernetes environment, follow
-the below
-steps:
+To Observe API calls of your workloads served by Nginx inc. ingress controller in Kubernetes environment, you've two
+options:
+
+### Automatic configuration
+
+> **Note**: This option will restart your ingress controller deployment.
+
+- Add SentryFlow repo
+
+```shell
+helm repo add 5gsec https://5gsec.github.io/charts
+helm repo update 5gsec
+```
+
+- Update `values.yaml` file as follows.
+
+```shell
+helm show values 5gsec/sentryflow > values.yaml
+```
+
+```yaml
+filters:
+server:
+  # Existing snippets
+  # Following is required for `nginx-inc-ingress-controller` receiver.  
+  nginxIngress:
+    deploymentName: <nginx-ingress-controller-deploy-name>
+    configMapName: <nginx-ingress-configmap-name>
+    sentryFlowNjsConfigMapName: <sentryflow-nginx-inc-configmap-name>
+
+receivers:
+  others:
+    - name: nginx-inc-ingress-controller # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
+      namespace: <ingress-controller-namespace> # Kubernetes namespace in which you've deployed the ingress controller.
+      autoConfigure: true
+# Existing snippets
+```
+
+- Deploy SentryFlow
+
+```shell
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
+```
+
+### Manual configuration
+
+To configure it manually follow the below steps:
 
 1. Create the following configmap in the same namespace as ingress controller.
 
@@ -167,38 +211,42 @@ data:
     }
 ```
 
-4. Download SentryFlow manifest file
+4. Deploy SentryFlow
 
-  ```shell
-  curl -sO https://raw.githubusercontent.com/5GSEC/SentryFlow/refs/heads/main/deployments/sentryflow.yaml
-  ```
+- Add SentryFlow repo
 
-5. Update the `.receivers` configuration in `sentryflow` [configmap](../../../../../deployments/sentryflow.yaml) as
-   follows:
+```shell
+helm repo add 5gsec https://5gsec.github.io/charts
+helm repo update 5gsec
+```
 
-  ```yaml
-  filters:
-    server:
-      port: 8081
-    # Following is required for `nginx-inc-ingress-controller` receiver.  
-    nginxIngress:
-      deploymentName: <nginx-ingress-controller-deploy-name>
-      configMapName: <nginx-ingress-configmap-name>
-      sentryFlowNjsConfigMapName: <sentryflow-nginx-inc-configmap-name>
+- Update `values.yaml` file as follows.
 
-  receivers:
-    others:
-      - name: nginx-inc-ingress-controller # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
-        namespace: <ingress-controller-namespace> # Kubernetes namespace in which you've deployed the ingress controller.
-    ...
-  ```
+```shell
+helm show values 5gsec/sentryflow > values.yaml
+```
 
-6. Deploy SentryFlow
+```yaml
+filters:
+server:
+  # Existing snippets
+  # Following is required for `nginx-inc-ingress-controller` receiver.  
+  nginxIngress:
+    deploymentName: <nginx-ingress-controller-deploy-name>
+    configMapName: <nginx-ingress-configmap-name>
+    sentryFlowNjsConfigMapName: <sentryflow-nginx-inc-configmap-name>
 
-  ```shell
-  kubectl apply -f sentryflow.yaml
-  ```
+receivers:
+  others:
+    - name: nginx-inc-ingress-controller # SentryFlow makes use of `name` to configure receivers. DON'T CHANGE IT.
+      namespace: <ingress-controller-namespace> # Kubernetes namespace in which you've deployed the ingress controller.
+# Existing snippets
+```
 
-7. Trigger API calls to generate traffic.
+- Deploy SentryFlow
 
-8. Use SentryFlow [log client](../../../../client) to see the API Events.
+```shell
+helm install --values values.yaml sentryflow 5gsec/sentryflow -n sentryflow --create-namespace 
+```
+
+5. Trigger API calls to generate traffic.

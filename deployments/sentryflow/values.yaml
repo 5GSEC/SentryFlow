@@ -89,30 +89,32 @@ config:
   filters:
     server:
       port: 9999
-      # Envoy filter is required for `istio-sidecar` service-mesh receiver.
-      # Uncomment the following if you want to use `istio-sidecar` traffic source
-  #    envoy:
-  #      uri: 5gsec/sentryflow-httpfilter:latest
+    # Envoy filter is required for `istio-sidecar` service-mesh receiver.
+    envoy:
+      uri: 5gsec/sentryflow-httpfilter:latest
 
-  #  Following is required for `nginx-inc-ingress-controller` receiver.
-  # Uncomment the following if you want to use `nginx-inc-ingress-controller` traffic source
-  #  nginxIngress:
-  #    deploymentName: nginx-ingress-controller
-  #    configMapName: nginx-ingress
-  #    sentryFlowNjsConfigMapName: sentryflow-njs
+    #  Following is required for `nginx-inc-ingress-controller` receiver.
+    # Uncomment the following if you want to use `nginx-inc-ingress-controller` traffic source
+    nginxIngress:
+      deploymentName: nginx-ingress-controller
+      configMapName: nginx-ingress
+      sentryFlowNjsConfigMapName: sentryflow-nginx-inc
   receivers: # aka sources
-  # Uncomment the following receivers according to your requirement.
-  #    serviceMeshes:
-  # To get API observability from Istio service mesh uncomment the following
-  #      - name: istio-sidecar
-  #        namespace: istio-system
+    # Uncomment the following receivers according to your requirement.
+#    serviceMeshes:
+      # To get API observability from Istio service mesh uncomment the following
+#      - name: istio-sidecar
+#        namespace: istio-system
 
-  #  others:
-  # To get API observability from F5 nginx ingress controller uncomment the following
-  #    - name: nginx-inc-ingress-controller
-  #      namespace: default
+#    others:
+      #  # To get API observability from F5 nginx ingress controller uncomment the following
+#      - name: nginx-inc-ingress-controller
+#        namespace: nginx-ingress
+        # Set to `true` to automatically configure the Nginx Inc. Ingress Controller deployment
+        # to enable HTTP access log observability.
+#        autoConfigure: true
 
-  #    - name: nginx-webserver
+#      - name: nginx-webserver
   exporter:
     grpc:
       port: 8888

@@ -9,15 +9,18 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/go-logr/logr"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // NewClient returns a new Client using the provided scheme to map go structs to
 // GroupVersionKinds.
 func NewClient(scheme *runtime.Scheme, kubeConfig string) (client.Client, error) {
+	log.SetLogger(logr.Logger{})
 	config, err := getConfig(kubeConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config: %v", err)
