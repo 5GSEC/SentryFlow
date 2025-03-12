@@ -129,7 +129,7 @@ class Request(_message.Message):
     def __init__(self, headers: _Optional[_Mapping[str, str]] = ..., body: _Optional[str] = ...) -> None: ...
 
 class Response(_message.Message):
-    __slots__ = ("headers", "body")
+    __slots__ = ("headers", "body", "backend_latency_in_nanos")
     class HeadersEntry(_message.Message):
         __slots__ = ("key", "value")
         KEY_FIELD_NUMBER: _ClassVar[int]
@@ -139,9 +139,11 @@ class Response(_message.Message):
         def __init__(self, key: _Optional[str] = ..., value: _Optional[str] = ...) -> None: ...
     HEADERS_FIELD_NUMBER: _ClassVar[int]
     BODY_FIELD_NUMBER: _ClassVar[int]
+    BACKEND_LATENCY_IN_NANOS_FIELD_NUMBER: _ClassVar[int]
     headers: _containers.ScalarMap[str, str]
     body: str
-    def __init__(self, headers: _Optional[_Mapping[str, str]] = ..., body: _Optional[str] = ...) -> None: ...
+    backend_latency_in_nanos: int
+    def __init__(self, headers: _Optional[_Mapping[str, str]] = ..., body: _Optional[str] = ..., backend_latency_in_nanos: _Optional[int] = ...) -> None: ...
 
 class APIMetrics(_message.Message):
     __slots__ = ("perAPICounts",)

@@ -55,6 +55,7 @@ struct Reqquest {
 struct Ressponse {
     headers: HashMap<String, String>,
     body: String,
+    backend_latency_in_nanos: u64,
 }
 
 const MAX_BODY_SIZE: usize = 1_000_000; // 1 MB
@@ -213,6 +214,16 @@ impl HttpContext for Plugin {
         if !body.is_empty() && body.len() <= MAX_BODY_SIZE {
             self.api_event.response.body = body;
         }
+
+        if let Some(value) = self.get_property(vec!["response", "backend_latency"]) {
+            // Ensure the byte vector has at least 8 bytes for u64
+            if value.len() >= 8 {
+                // Convert the first 8 bytes to an u64 (nanoseconds)
+                self.api_event.response.backend_latency_in_nanos =
+                    u64::from_ne_bytes(value[..8].try_into().unwrap_or_default());
+            }
+        }
+
         Action::Continue
     }
 }
