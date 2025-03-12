@@ -92,6 +92,7 @@ message Request {
 message Response {
   map<string, string> headers = 1;
   string body = 2;
+  uint64 backend_latency_in_nanos = 3;
 }
 
 message APIMetrics {
