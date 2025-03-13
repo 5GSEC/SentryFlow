@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{Duration, UNIX_EPOCH};
 
+const HEADER_X_SENTRYFLOW_TLS_VERSION: &str = "x-sentryflow-tls-version";
+
 #[derive(Default)]
 struct Plugin {
     _context_id: u32,
@@ -146,6 +148,14 @@ impl HttpContext for Plugin {
             .unwrap_or_default(),
         );
 
+        // https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes#connection-attributes
+        if let Some(tls_version) = self.get_property(vec!["connection", "tls_version"]) {
+            headers.insert(
+                HEADER_X_SENTRYFLOW_TLS_VERSION.to_string(),
+                String::from_utf8(tls_version).unwrap_or_default(),
+            );
+        }
+
         self.api_event.metadata.timestamp = self
             .get_current_time()
             .duration_since(UNIX_EPOCH)
@@ -180,13 +190,30 @@ impl HttpContext for Plugin {
     }
 
     fn on_http_response_headers(&mut self, _num_headers: usize, _end_of_stream: bool) -> Action {
-        let (dest_ip, dest_port) = get_url_and_port(
+        // https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes#upstream-attributes
+        let (mut dest_ip, mut dest_port) = get_url_and_port(
             String::from_utf8(
-                self.get_property(vec!["destination", "address"])
+                self.get_property(vec!["upstream", "address"])
                     .unwrap_or_default(),
             )
             .unwrap_or_default(),
         );
+
+        // For `OPTIONS` requests, the upstream connection remote address is often unavailable.
+        // This is due to browser CORS preflight behavior, which may prevent Envoy from
+        // establishing a full upstream connection.
+        // In such cases, fallback to the downstream local address, which represents
+        // the IP address of the Envoy listener handling the client connection.
+        // https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/advanced/attributes#connection-attributes
+        if dest_ip.is_empty() || dest_port == 0 {
+            (dest_ip, dest_port) = get_url_and_port(
+                String::from_utf8(
+                    self.get_property(vec!["destination", "address"])
+                        .unwrap_or_default(),
+                )
+                .unwrap_or_default(),
+            );
+        }
 
         let res_headers = self.get_http_response_headers();
         let mut headers: HashMap<String, String> = HashMap::with_capacity(res_headers.len());
@@ -198,10 +225,16 @@ impl HttpContext for Plugin {
             }
         }
 
+        if let Some(tls_version) = self.get_property(vec!["upstream", "tls_version"]) {
+            headers.insert(
+                HEADER_X_SENTRYFLOW_TLS_VERSION.to_string(),
+                String::from_utf8(tls_version).unwrap_or_default(),
+            );
+        }
+
         self.api_event.response.headers = headers;
         self.api_event.destination.ip = dest_ip;
         self.api_event.destination.port = dest_port;
-
         Action::Continue
     }
 
