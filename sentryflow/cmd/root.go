@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/5GSEC/SentryFlow/pkg/core"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/core"
 )
 
 var (

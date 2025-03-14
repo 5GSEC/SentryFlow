@@ -1,15 +1,15 @@
 module github.com/5GSEC/SentryFlow/protobuf/golang
 
-go 1.22
+go 1.24.1
 
 require (
-	google.golang.org/grpc v1.66.2
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/grpc v1.71.0
+	google.golang.org/protobuf v1.36.5
 )
 
 require (
-	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
+	golang.org/x/net v0.37.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250313205543-e70fdf4c4cb4 // indirect
 )

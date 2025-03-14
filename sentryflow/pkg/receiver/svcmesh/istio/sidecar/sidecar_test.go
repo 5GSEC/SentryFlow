@@ -25,8 +25,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	"github.com/5GSEC/SentryFlow/pkg/config"
-	"github.com/5GSEC/SentryFlow/pkg/util"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/config"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/util"
 )
 
 var istioRootNs = getIstioRootNamespaceFromConfig(getConfig())

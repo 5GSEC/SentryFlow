@@ -23,12 +23,12 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/5GSEC/SentryFlow/pkg/config"
-	"github.com/5GSEC/SentryFlow/pkg/exporter"
-	"github.com/5GSEC/SentryFlow/pkg/k8s"
-	"github.com/5GSEC/SentryFlow/pkg/receiver"
-	"github.com/5GSEC/SentryFlow/pkg/util"
 	protobuf "github.com/5GSEC/SentryFlow/protobuf/golang"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/config"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/exporter"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/k8s"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/receiver"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/util"
 )
 
 type Manager struct {

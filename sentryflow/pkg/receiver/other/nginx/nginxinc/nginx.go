@@ -13,8 +13,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/5GSEC/SentryFlow/pkg/config"
-	"github.com/5GSEC/SentryFlow/pkg/util"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/config"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/util"
 )
 
 func Start(ctx context.Context, cfg *config.Config, k8sClient client.Client) {
