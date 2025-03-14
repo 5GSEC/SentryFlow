@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/5GSEC/SentryFlow/pkg/util"
+	"github.com/5GSEC/SentryFlow/sentryflow/pkg/util"
 )
 
 const (

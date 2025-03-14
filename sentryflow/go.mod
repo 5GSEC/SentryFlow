@@ -1,4 +1,4 @@
-module github.com/5GSEC/SentryFlow
+module github.com/5GSEC/SentryFlow/sentryflow
 
 go 1.24.1
 
