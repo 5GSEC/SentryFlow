@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2024 Authors of SentryFlow
 
-FROM golang:1.23 AS builder
+FROM golang:1.24.1 AS builder
 
 ARG TARGETOS
 ARG TARGETARCH

@@ -60,7 +60,7 @@ jobs:
       - name: Setup go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.24'
 
       - name: go fmt vet
         run: make fmt vet
@@ -69,7 +69,7 @@ jobs:
         uses: golangci/golangci-lint-action@v6
         with:
           working-directory: ./sentryflow
-          version: v1.60.3
+          version: v1.64.7
           args: --timeout=10m --out-format=line-number
           skip-cache: true # https://github.com/golangci/golangci-lint-action/issues/244#issuecomment-1052197778
 

@@ -4,7 +4,7 @@
 package main
 
 import (
-	"github.com/5GSEC/SentryFlow/cmd"
+	"github.com/5GSEC/SentryFlow/sentryflow/cmd"
 )
 
 func main() {
