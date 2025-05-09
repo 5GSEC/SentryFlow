@@ -13,7 +13,8 @@ observability. It includes detailed commands for each step along with their expl
 
 ## 2. Deploying SentryFlow
 
-Configure SentryFlow receiver by following [this](receivers.md). Then deploy updated SentryFlow manifest by following `kubectl` command:
+Configure SentryFlow receiver by following [this](receivers.md). Then deploy updated SentryFlow manifest by following
+`kubectl` command:
 
 ```shell
 kubectl apply -f sentryflow.yaml
@@ -29,24 +30,29 @@ NAME                         READY   STATUS    RESTARTS   AGE
 sentryflow-cff887bbd-rljm7   1/1     Running   0          73s
 ```
 
-## 3. Deploying SentryFlow Clients
+## 3. Viewing Captured API Access Events Clients
 
-SentryFlow has now been deployed in the cluster. In addition, SentryFlow exports API access logs through `gRPC`.
+SentryFlow has now been deployed in the cluster. In addition, SentryFlow exports API access events through `gRPC`.
 
-For testing purposes, a client has been developed.
-
-- `log-client`: Simply logs everything on `STDOUT` coming from SentryFlow.
-
-It can be deployed into the cluster under namespace `sentryflow` by following the command:
+You can use `sfctl` the SentryFlow client to view or filter captured API access events
 
 ```shell
-kubectl apply -f https://raw.githubusercontent.com/5GSEC/SentryFlow/refs/heads/main/deployments/sentryflow-client.yaml
+$ sfctl event
+{"level":"INFO","timestamp":"2025-01-08T18:15:31.720+0530","caller":"apievent/common.go:165","msg":"starting API Events streaming"}
+{"level":"INFO","timestamp":"2025-01-08T18:15:31.771+0530","caller":"apievent/common.go:171","msg":"started API Events streaming"}
+# API Access Events
+{"metadata":{"context_id":9,"timestamp":1736340391,"istio_version":"1.24.1","mesh_id":"cluster.local","node_name":"kind-control-plane"},"source":{"name":"server-c7669846-w5v8m","namespace":"default","ip":"10.244.0.8","port":57754},"destination":{"namespace":"sentryflow","ip":"10.96.79.211","port":9999},"request":{"headers":{":authority":"sentryflow.sentryflow:9999",":method":"HEAD",":path":"/",":scheme":"http","accept":"*/*","user-agent":"curl/7.88.1","x-forwarded-proto":"http","x-request-id":"9ff1f0fb-adca-4cbb-bfbb-7927d5aa02ae"}},"response":{"headers":{":status":"404","content-length":"19","content-type":"text/plain; charset=utf-8","date":"Wed, 08 Jan 2025 12:46:31 GMT","x-content-type-options":"nosniff"}},"protocol":"HTTP/1.1"}
+...
 ```
 
-Then, check if it is up and running by:
+### Filter API Events based on some Response Status Code
 
 ```shell
-kubectl get pods -n sentryflow
+$ sfctl event filter --status "4xx"
+{"level":"INFO","timestamp":"2025-01-08T18:20:37.096+0530","caller":"apievent/common.go:165","msg":"starting API Events streaming"}
+{"level":"INFO","timestamp":"2025-01-08T18:20:37.151+0530","caller":"apievent/common.go:171","msg":"started API Events streaming"}
+# API Access Events
+{"metadata":{"context_id":10,"timestamp":1736340639,"istio_version":"1.24.1","mesh_id":"cluster.local","node_name":"kind-control-plane"},"source":{"name":"server-c7669846-w5v8m","namespace":"default","ip":"10.244.0.8","port":37154},"destination":{"namespace":"sentryflow","ip":"10.96.79.211","port":9999},"request":{"headers":{":authority":"sentryflow.sentryflow:9999",":method":"HEAD",":path":"/",":scheme":"http","accept":"*/*","user-agent":"curl/7.88.1","x-forwarded-proto":"http","x-request-id":"e20a1002-09d1-4f3f-936e-ce688652ea4d"}},"response":{"headers":{":status":"404","content-length":"19","content-type":"text/plain; charset=utf-8","date":"Wed, 08 Jan 2025 12:50:39 GMT","x-content-type-options":"nosniff"}},"protocol":"HTTP/1.1"}
 ```
 
-If you observe `log-client`, is running, the setup has been completed successfully.
+For more info check [this](../sfctl/README.md).
