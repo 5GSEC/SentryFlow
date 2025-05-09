@@ -65,8 +65,9 @@ func (m *Manager) run(cfg *config.Config, kubeConfig string) {
 	m.Wg = &sync.WaitGroup{}
 	m.ApiEvents = make(chan *protobuf.APIEvent, 10240)
 
+	runtimeSchemes := registerAndGetScheme()
 	if m.areK8sReceivers(cfg) {
-		k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
+		k8sClient, err := k8s.NewClient(runtimeSchemes, kubeConfig)
 		if err != nil {
 			m.Logger.Errorf("failed to create k8s client: %v", err)
 			return
@@ -115,7 +116,7 @@ func (m *Manager) run(cfg *config.Config, kubeConfig string) {
 		case updatedConfig := <-m.configChan:
 			m.receiversCancelFunc()
 			if m.areK8sReceivers(updatedConfig) {
-				k8sClient, err := k8s.NewClient(registerAndGetScheme(), kubeConfig)
+				k8sClient, err := k8s.NewClient(runtimeSchemes, kubeConfig)
 				if err != nil {
 					m.Logger.Errorf("failed to create k8s client: %v", err)
 					return
@@ -149,7 +150,7 @@ func (m *Manager) watchConfig(configFilePath string, logger *zap.SugaredLogger) 
 			return
 		}
 		m.configChan <- cfg
-		m.Logger.Info("config file changed, reloading config...")
+		m.Logger.Warn("config file changed, reloading config...")
 	})
 }
 
